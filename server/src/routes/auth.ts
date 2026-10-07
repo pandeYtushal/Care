@@ -48,7 +48,7 @@ function setOAuthCookie(res: Parameters<typeof setSessionCookie>[0], name: strin
 function clearOAuthCookie(res: Parameters<typeof clearSessionCookie>[0], name: string) {
   res.append('Set-Cookie', `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${env.nodeEnv === 'production' ? '; Secure' : ''}`);
 }
-const frontendUrl = () => (env.googleRedirectUri ? new URL(env.googleRedirectUri).origin : '') || env.allowedOrigins[0] || 'http://localhost:5173';
+const frontendUrl = () => env.allowedOrigins[0] || 'http://localhost:5173';
 const googleError = (res: Parameters<typeof clearSessionCookie>[0], code: string) => res.redirect(`${frontendUrl()}/login?auth_error=${encodeURIComponent(code)}`);
 
 type GoogleJwk = JsonWebKey & { kid?: string };
