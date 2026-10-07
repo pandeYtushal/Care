@@ -14,12 +14,10 @@ export function cookieParser(_req: Request, _res: Response, next: NextFunction) 
 }
 
 export function setSessionCookie(res: Response, token: string, expiresAt: Date, secure: boolean) {
-  // Lax is required so the authenticated doctor session is sent back on the
-  // top-level GET from Google's OAuth callback. Unsafe requests still require
-  // an allowlisted Origin at the application layer.
-  res.append('Set-Cookie', `atelier_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Expires=${expiresAt.toUTCString()}${secure ? '; Secure' : ''}`);
+  // SameSite=None is required for cross-domain cookies (Vercel -> Render)
+  res.append('Set-Cookie', `atelier_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=None; Expires=${expiresAt.toUTCString()}${secure ? '; Secure' : ''}`);
 }
 
 export function clearSessionCookie(res: Response, secure: boolean) {
-  res.append('Set-Cookie', `atelier_session=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure ? '; Secure' : ''}`);
+  res.append('Set-Cookie', `atelier_session=; Path=/; HttpOnly; SameSite=None; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure ? '; Secure' : ''}`);
 }
