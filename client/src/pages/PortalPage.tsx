@@ -1279,7 +1279,7 @@ function CareHistoryPage() {
         type: "Report",
         title: `Report uploaded: ${r.original_filename}`,
         subtitle: dateTime(String(r.created_at)),
-        link: `/api/portal/records/${encodeURIComponent(String(r.id))}/download?view=1`,
+        link: `${import.meta.env.VITE_API_URL || ''}/api/portal/records/${encodeURIComponent(String(r.id))}/download?view=1`,
       }),
     );
     data.prescriptions.forEach((p) =>
@@ -2395,7 +2395,7 @@ function RecordList({ records }: { records: Record<string, unknown>[] }) {
             <small>Added {dateTime(String(r.created_at))}</small>
             <div>
               <a
-                href={`/api/portal/records/${encodeURIComponent(String(r.id))}/download?view=1`}
+                href={`${import.meta.env.VITE_API_URL || ''}/api/portal/records/${encodeURIComponent(String(r.id))}/download?view=1`}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -2670,7 +2670,7 @@ function IntegrationsPage() {
       setBusy(false);
     }
   }
-  const callbackUrl = `${window.location.origin}/api/integrations/google/callback`;
+  const callbackUrl = `${import.meta.env.VITE_API_URL || window.location.origin}/api/integrations/google/callback`;
   return (
     <main className="portal-content">
       <div className="eyebrow">PRACTICE SETTINGS</div>
@@ -2746,7 +2746,7 @@ function IntegrationsPage() {
                 className={`btn btn-primary ${status?.configured ? "" : "disabled-link"}`}
                 href={
                   status?.configured
-                    ? "/api/integrations/google/connect"
+                    ? `${import.meta.env.VITE_API_URL || ''}/api/integrations/google/connect`
                     : undefined
                 }
                 aria-disabled={!status?.configured}
