@@ -55,6 +55,29 @@ function clinicToday(zone?: string | null) {
   );
   return `${p.year}-${p.month}-${p.day}`;
 }
+
+function clinicDateOffset(zone: string | undefined, offset: number) {
+  const value = new Date(`${clinicToday(zone)}T12:00:00`);
+  value.setDate(value.getDate() + offset);
+  let safeZone = "Asia/Kolkata";
+  if (zone?.trim()) {
+    try {
+      new Intl.DateTimeFormat("en", { timeZone: zone }).format();
+      safeZone = zone;
+    } catch {
+      /* Keep the booking date picker usable if legacy data has a bad zone. */
+    }
+  }
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: safeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(value).map((part) => [part.type, part.value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
 export default function BookingPage() {
   const [services, setServices] = useState<Service[]>([]),
     [serviceId, setServiceId] = useState(""),
@@ -513,29 +536,14 @@ export default function BookingPage() {
               <div className="booking-time-panel">
                 <label>
                   Date
-                  <select
+                  <input
+                    className="booking-date-input"
+                    type="date"
+                    min={clinicToday(service?.timezone)}
+                    max={clinicDateOffset(service?.timezone, 89)}
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                  >
-                    {Array.from({ length: 90 }, (_, i) => {
-                      const d = new Date(
-                        `${clinicToday(service?.timezone)}T12:00:00`,
-                      );
-                      d.setDate(d.getDate() + i);
-                      const value = new Intl.DateTimeFormat("en-CA", {
-                        timeZone: service?.timezone || "Asia/Kolkata",
-                      }).format(d);
-                      return (
-                        <option key={value} value={value}>
-                          {new Intl.DateTimeFormat(undefined, {
-                            weekday: "long",
-                            month: "short",
-                            day: "numeric",
-                          }).format(d)}
-                        </option>
-                      );
-                    })}
-                  </select>
+                  />
                 </label>
                 <div className="booking-time-meta">
                   <strong>

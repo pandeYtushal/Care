@@ -38,6 +38,10 @@ export default function LegalPage({ type }: LegalPageProps) {
         {
           title: '5. How Do We Keep Your Information Safe?',
           body: 'We have implemented appropriate technical and organizational security measures designed to protect the security of any personal information we process. However, please also remember that we cannot guarantee that the internet itself is 100% secure.'
+        },
+        {
+          title: '6. Essential Cookies',
+          body: 'We use essential cookies to keep you signed in, protect your account, and support secure Google sign-in and Google Calendar connection. These cookies support core account and security functions.'
         }
       ]
     },

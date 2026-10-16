@@ -2897,12 +2897,22 @@ function ProfilePage({ role }: { role: Role }) {
                   <span>
                     Gender <span className="required-field">Required</span>
                   </span>
-                  <input
+                  <select
+                    className="profile-gender-select"
                     required
-                    maxLength={40}
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
-                  />
+                  >
+                    <option value="" disabled>Select an option</option>
+                    {gender && !["Female", "Male", "Non-binary", "Other", "Prefer not to say"].includes(gender) && (
+                      <option value={gender}>{gender}</option>
+                    )}
+                    <option value="Female">Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Non-binary">Non-binary</option>
+                    <option value="Other">Other</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                  </select>
                 </label>
               </>
             )}

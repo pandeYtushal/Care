@@ -1,4 +1,5 @@
-.lp-root{overflow:clip;color:var(--color-ink);background:var(--color-canvas)}
+.lp-root{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;overflow:clip;color:var(--color-ink);background:var(--color-canvas)}
+.lp-root>main{flex:1 0 auto}
 .lp-container{width:min(100% - 64px,1280px);margin-inline:auto}
 .lp-header{position:sticky;top:0;z-index:50;border-bottom:1px solid transparent;background:color-mix(in srgb,var(--color-canvas) 94%,transparent);backdrop-filter:blur(12px);transition:border-color .2s ease,box-shadow .2s ease}
 .lp-header--scrolled{border-color:var(--color-border);box-shadow:0 4px 20px rgb(38 52 46 / 5%)}
@@ -118,4 +119,16 @@
 @media(max-width:1020px){.lp-nav{gap:15px}.lp-nav__link{font-size:12px}.lp-header__inner{gap:18px}.lp-hero__inner{grid-template-columns:minmax(0,1fr) minmax(320px,.9fr);gap:35px}.lp-story-art{min-height:405px}.lp-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.lp-step-card:nth-child(3){padding-left:0;border-top:1px solid var(--color-border);border-left:0}.lp-step-card:nth-child(4){border-top:1px solid var(--color-border)}}
 @media(max-width:767px){.lp-container{width:min(100% - 40px,600px)}.lp-header__inner{min-height:68px}.lp-nav,.lp-header__cta{display:none}.lp-hero{min-height:auto;padding-block:58px 64px}.lp-hero__inner{grid-template-columns:1fr;gap:35px}.lp-hero__heading{max-width:10ch;font-size:clamp(58px,13vw,82px)}.lp-hero__sub{margin-top:18px;font-size:15px}.lp-hero__actions{display:grid;grid-template-columns:1fr;margin-top:23px}.lp-root .btn-lg{width:100%}.lp-trust-row{gap:11px 15px;margin-top:24px}.lp-trust-item{font-size:10px}.lp-hero__mockup{padding:4px 0}.lp-story-art{min-height:350px}.lp-story-art__paper{width:min(92%,390px)}.lp-story-art__caption{right:0;bottom:0}.lp-section{padding-block:70px;scroll-margin-top:76px}.lp-section__header{margin-bottom:29px}.lp-section__header h2,.lp-faq__intro h2,.lp-cta h2{font-size:clamp(39px,10vw,54px)}.lp-step-card,.lp-step-card+.lp-step-card{min-height:auto;padding:20px 0;border-left:0}.lp-step-card+.lp-step-card{border-top:1px solid var(--color-border)}.lp-step-card h3{margin-top:17px}.lp-service-grid{grid-template-columns:1fr}.lp-service-card{min-height:230px}.lp-service-card__top{margin-bottom:20px}.lp-quote-section{padding-block:82px}.lp-faq__layout{grid-template-columns:1fr;gap:27px}.lp-faq__item summary{min-height:68px}.lp-cta__actions{display:grid}}
 @media(max-width:380px){.lp-container{width:calc(100% - 32px)}.lp-hero__heading{font-size:clamp(53px,14vw,64px)}.lp-story-art{min-height:315px}.lp-story-art__paper{padding:23px 20px}.lp-story-art__line{grid-template-columns:27px 26px minmax(0,1fr);gap:9px}.lp-story-art__line strong{font-size:12px}.lp-trust-row{display:grid;grid-template-columns:1fr 1fr}}
+/* Keep the four-step explanation readable on phones: the tablet two-column grid
+   otherwise remains active because the mobile rules only changed card padding. */
+@media(max-width:767px){
+  .lp-root .lp-steps{grid-template-columns:minmax(0,1fr)}
+  .lp-root .lp-step-card,
+  .lp-root .lp-step-card+.lp-step-card,
+  .lp-root .lp-step-card:nth-child(3),
+  .lp-root .lp-step-card:nth-child(4){min-height:0;padding:20px 0;border-left:0}
+  .lp-root .lp-step-card+.lp-step-card{border-top:1px solid var(--color-border)}
+  .lp-root .lp-step-card h3{margin:15px 0 7px;font-size:23px;line-height:1.18;overflow-wrap:normal}
+  .lp-root .lp-step-card p{max-width:52ch;font-size:13px;line-height:1.65;overflow-wrap:normal}
+}
 @media(prefers-reduced-motion:reduce){.lp-root *, .lp-root *::before, .lp-root *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, HeartPulse } from 'lucide-react';
 import { api, ApiError } from '../lib/api';
+import EssentialCookieNotice from '../components/EssentialCookieNotice';
 
 export default function PasswordRecoveryPage({ mode }: { mode: 'request' | 'reset' }) {
   const [params] = useSearchParams();
@@ -50,6 +51,7 @@ export default function PasswordRecoveryPage({ mode }: { mode: 'request' | 'rese
         <button className="auth-submit min-h-11" disabled={busy}>{busy?'Please wait…':resetting?'Save new password':'Email reset link'}</button>
       </form>
       {!resetting&&<p className="auth-privacy-note">For your security, the response is the same whether or not the email has an account.</p>}
+      <EssentialCookieNotice className="auth-cookie-note" />
     </div></section>
   </main>;
 }

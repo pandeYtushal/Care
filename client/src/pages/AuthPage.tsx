@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react
 import { ArrowLeft, ArrowRight, HeartPulse, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { api, apiBaseUrl, ApiError } from '../lib/api';
+import EssentialCookieNotice from '../components/EssentialCookieNotice';
 
 type Props = { mode: 'login' | 'register' };
 type LoginUser = { id?: string; role: 'PATIENT' | 'DOCTOR' | 'ADMIN' };
@@ -182,6 +183,7 @@ export default function AuthPage({ mode }: Props) {
           </div>
 
           <p className="auth-privacy-note">Health information should only be shared through your authenticated patient portal.</p>
+          <EssentialCookieNotice className="auth-cookie-note" />
         </div>
       </section>
     </main>

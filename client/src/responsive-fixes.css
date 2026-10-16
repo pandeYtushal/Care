@@ -1,0 +1,372 @@
+/* Final responsive layer. Keep page-specific styling above this file; these
+   rules address shared layout behavior at tablet and phone widths. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+video,
+svg {
+  max-width: 100%;
+}
+
+.portal-layout,
+.portal-main,
+.portal-scroll-area,
+.portal-content,
+.patient-portal,
+.doctor-workspace {
+  min-width: 0;
+}
+
+.portal-content :is(h1, h2, h3, p, dd, td, th, a, button, label, small, strong) {
+  overflow-wrap: anywhere;
+}
+
+.data-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.booking-methods {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px !important;
+  min-width: 0;
+}
+
+.booking-method-option {
+  display: grid !important;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start !important;
+  gap: 11px !important;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: none !important;
+  padding: 13px !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 10px;
+  background: var(--color-surface, #fffefa);
+  line-height: 1.5;
+}
+
+.booking-method-option:has(input:checked) {
+  border-color: var(--color-brand, #3e7058) !important;
+  background: var(--color-brand-subtle, #f2f7f1);
+}
+
+.booking-method-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--color-brand, #3e7058);
+}
+
+.booking-method-option > span {
+  min-width: 0;
+  line-height: 1.5;
+}
+
+.booking-method-option strong {
+  display: block;
+  line-height: 1.35;
+}
+
+.portal-content .profile-gender-select,
+.portal-content .booking-date-input {
+  min-height: 52px;
+  padding: 0 46px 0 15px;
+  border: 1px solid #d8dfd4;
+  border-radius: 12px;
+  color: var(--color-ink, #26382f);
+  background-color: #fffefa;
+  box-shadow: 0 1px 2px rgb(38 52 46 / 3%);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+.portal-content .profile-gender-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23586f60' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  cursor: pointer;
+}
+
+.portal-content .booking-date-input {
+  width: min(100%, 360px);
+  color-scheme: light;
+  cursor: pointer;
+}
+
+.portal-content .profile-gender-select:focus-visible,
+.portal-content .booking-date-input:focus-visible {
+  border-color: #70917a;
+  outline: 3px solid rgb(79 126 94 / 14%);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+
+.portal-content .booking-date-input::-webkit-calendar-picker-indicator {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  opacity: .72;
+  cursor: pointer;
+}
+
+.essential-cookie-note {
+  margin: 0;
+  color: var(--color-ink-muted, #68776f);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.essential-cookie-note a {
+  color: var(--color-brand-active, #315b46);
+  font-weight: 650;
+  text-underline-offset: 2px;
+}
+
+.essential-cookie-note a:focus-visible {
+  outline: 2px solid var(--color-focus, #8fae92);
+  outline-offset: 2px;
+}
+
+.auth-cookie-note {
+  max-width: 46ch;
+  margin: 10px auto 0;
+  text-align: center;
+}
+
+.patient-appointment-detail > .card {
+  border-color: #e3e6dc;
+  border-radius: 16px;
+  box-shadow: 0 5px 18px rgb(42 55 45 / 4%);
+}
+
+.patient-appointment-detail > .card:first-of-type {
+  border-color: #dce6da;
+  background: linear-gradient(135deg, #f4f7f0, #fffefa 72%);
+}
+
+.patient-appointment-detail > .card + .card {
+  margin-top: 14px;
+}
+
+.patient-appointment-detail > .card > h2 {
+  margin: 0 0 13px;
+  color: #2c4336;
+  font-size: 17px;
+  letter-spacing: -.02em;
+}
+
+.patient-appointment-detail .empty-state {
+  justify-items: start;
+  grid-template-columns: 40px minmax(0, 1fr);
+  justify-items: start;
+  gap: 3px 12px;
+  padding: 14px 0 2px;
+  border: 0;
+  border-top: 1px solid #edf0e9;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.patient-appointment-detail .empty-state > :is(h2, p) {
+  text-align: left;
+}
+
+.patient-appointment-detail .empty-state .empty-symbol {
+  grid-row: 1 / span 2;
+  width: 38px;
+  height: 38px;
+  margin: 0;
+  border-radius: 12px;
+  color: #52745d;
+  background: #edf2e9;
+}
+
+.patient-appointment-detail .empty-state h2 {
+  align-self: end;
+  margin: 0;
+  font-size: 15px;
+}
+
+.patient-appointment-detail .empty-state p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.patient-appointment-detail > .card > p {
+  color: #506358;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.booking-method-option small {
+  display: block;
+  margin-top: 3px;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .portal-scroll-area {
+    overflow-x: hidden;
+  }
+
+  .portal-content {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .portal-content :is(.stats-grid, .doctor-quick-stats) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portal-content :is(.doctor-focus-grid, .doctor-dashboard-grid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .portal-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+
+  .portal-content {
+    padding-inline: 16px;
+  }
+
+  .portal-content .page-header,
+  .portal-content > .page-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .portal-content .page-header :is(.btn, .button),
+  .portal-content > .page-header :is(.btn, .button) {
+    max-width: 100%;
+  }
+
+  .portal-content :is(.portal-actions, .booking-wizard-actions, .form-actions) {
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+
+  .portal-content :is(.portal-actions, .booking-wizard-actions, .form-actions) > * {
+    min-width: min(100%, 150px);
+  }
+
+  .portal-content :is(.form-grid, .service-form-grid, .availability-row) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-content :is(input, select, textarea, button, .btn, .button) {
+    max-width: 100%;
+  }
+
+  .portal-content .booking-progress {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .portal-content .booking-progress strong {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .portal-content .booking-progress > li {
+    min-width: 0;
+  }
+
+  .portal-content :is(.booking-summary, .appointment-detail-grid, .patient-facts) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-content .data-table {
+    min-width: 600px;
+  }
+
+  .portal-content :is(.appointment-filters, .calendar-view-switch) button {
+    min-width: 0;
+    padding-inline: 7px;
+  }
+
+  .portal-content :is(.patient-search, .list-search) {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .lp-container {
+    width: min(100% - 36px, 600px);
+  }
+
+  .static-page__hero-inner {
+    min-width: 0;
+  }
+
+  .auth-page {
+    min-height: 100dvh;
+  }
+
+  .auth-panel,
+  .auth-story {
+    min-width: 0;
+  }
+
+  .patient-appointment-detail > .card {
+    padding: 17px;
+  }
+
+  .patient-appointment-detail .appointment-detail-grid > div > strong {
+    font-size: 16px;
+  }
+
+  .portal-content .profile-gender-select,
+  .portal-content .booking-date-input {
+    min-height: 50px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  .portal-content {
+    padding-inline: 12px;
+  }
+
+  .portal-content .card,
+  .portal-content .account-card {
+    padding: 14px;
+  }
+
+  .portal-content :is(.portal-actions, .booking-wizard-actions, .form-actions) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-content :is(.portal-actions, .booking-wizard-actions, .form-actions) > * {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .portal-content .booking-progress strong {
+    font-size: 9px;
+  }
+
+  .booking-method-option {
+    padding: 11px !important;
+  }
+}
