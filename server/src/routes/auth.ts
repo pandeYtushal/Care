@@ -48,7 +48,15 @@ function setOAuthCookie(res: Parameters<typeof setSessionCookie>[0], name: strin
 function clearOAuthCookie(res: Parameters<typeof clearSessionCookie>[0], name: string) {
   res.append('Set-Cookie', `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${env.nodeEnv === 'production' ? '; Secure' : ''}`);
 }
-const frontendUrl = () => env.allowedOrigins[0] || 'http://localhost:5173';
+const frontendUrl = () => {
+  // In local development, the OAuth callback must return to the same origin
+  // that initiated it. APP_ORIGINS may list the deployed site first, so don't
+  // use its first entry for a localhost sign-in round trip.
+  if (env.nodeEnv === 'development' && env.googleRedirectUri) {
+    return new URL(env.googleRedirectUri).origin;
+  }
+  return env.allowedOrigins[0] || 'http://localhost:5173';
+};
 const googleError = (res: Parameters<typeof clearSessionCookie>[0], code: string) => res.redirect(`${frontendUrl()}/login?auth_error=${encodeURIComponent(code)}`);
 
 type GoogleJwk = JsonWebKey & { kid?: string };

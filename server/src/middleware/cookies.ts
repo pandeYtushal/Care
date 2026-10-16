@@ -14,10 +14,13 @@ export function cookieParser(_req: Request, _res: Response, next: NextFunction) 
 }
 
 export function setSessionCookie(res: Response, token: string, expiresAt: Date, secure: boolean) {
-  // SameSite=None is required for cross-domain cookies (Vercel -> Render)
-  res.append('Set-Cookie', `atelier_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=None; Expires=${expiresAt.toUTCString()}${secure ? '; Secure' : ''}`);
+  // Cross-site Vercel -> Render sessions need None; localhost must use Lax
+  // because browsers reject SameSite=None cookies unless they are Secure.
+  const sameSite = secure ? 'None' : 'Lax';
+  res.append('Set-Cookie', `atelier_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=${sameSite}; Expires=${expiresAt.toUTCString()}${secure ? '; Secure' : ''}`);
 }
 
 export function clearSessionCookie(res: Response, secure: boolean) {
-  res.append('Set-Cookie', `atelier_session=; Path=/; HttpOnly; SameSite=None; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure ? '; Secure' : ''}`);
+  const sameSite = secure ? 'None' : 'Lax';
+  res.append('Set-Cookie', `atelier_session=; Path=/; HttpOnly; SameSite=${sameSite}; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure ? '; Secure' : ''}`);
 }

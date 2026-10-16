@@ -6,7 +6,9 @@ import { fileURLToPath, URL } from 'node:url';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const proxyTarget = env.VITE_API_PROXY_TARGET;
+  // Local frontend work should use the local API by default. Override this
+  // only when intentionally developing against another backend.
+  const proxyTarget = env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:5000';
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
@@ -14,6 +16,6 @@ export default defineConfig(({ mode }) => {
         '@': fileURLToPath(new URL('./src', import.meta.url))
       },
     },
-    server: proxyTarget ? { proxy: { '/api': { target: proxyTarget, changeOrigin: true } } } : {},
+    server: { proxy: { '/api': { target: proxyTarget, changeOrigin: true } } },
   };
 });

@@ -36,9 +36,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
-import { api, ApiError } from "../lib/api";
+import { api, apiBaseUrl, ApiError } from "../lib/api";
+import BookingPage from "../patient/BookingPage";
 
 type Role = "PATIENT" | "DOCTOR";
+type PortalNavLink = { to: string; title: string; icon: LucideIcon; exact?: boolean };
 type Appointment = {
   id: string;
   patient_id?: string;
@@ -48,6 +50,8 @@ type Appointment = {
   method: string;
   meeting_url?: string | null;
   service_name: string;
+  doctor_name?: string;
+  doctorName?: string;
   other_person?: string;
   patient_name?: string;
 };
@@ -59,29 +63,27 @@ type Rule = {
   slotMinutes: number;
   bufferMinutes: number;
 };
-const patientLinks: Array<{
-  to: string;
-  title: string;
-  icon: LucideIcon;
-  exact?: boolean;
-}> = [
+const patientLinkGroups: Array<{ title: string; links: PortalNavLink[] }> = [
+  { title: "Your care", links: [
     { to: "/patient", title: "Overview", icon: LayoutDashboard, exact: true },
+    { to: "/patient/book", title: "Book a consultation", icon: CalendarDays },
     { to: "/patient/appointments", title: "Appointments", icon: CalendarDays },
     { to: "/patient/history", title: "Care history", icon: History },
-    { to: "/patient/book", title: "Book a visit", icon: CalendarDays },
-    { to: "/patient/reports", title: "Reports", icon: FileText },
+  ] },
+  { title: "Health records", links: [
+    { to: "/patient/reports", title: "Reports & documents", icon: FileText },
     { to: "/patient/prescriptions", title: "Prescriptions", icon: ClipboardList },
-    { to: "/patient/payments", title: "Payments", icon: CreditCard },
+  ] },
+  { title: "Activity", links: [
+    { to: "/patient/payments", title: "Payment history", icon: CreditCard },
     { to: "/patient/notifications", title: "Notifications", icon: Bell },
+  ] },
+  { title: "Account", links: [
     { to: "/patient/profile", title: "Profile", icon: UserRound },
     { to: "/patient/account", title: "Account", icon: Settings },
-  ];
-const doctorLinks: Array<{
-  to: string;
-  title: string;
-  icon: LucideIcon;
-  exact?: boolean;
-}> = [
+  ] },
+];
+const doctorLinks: PortalNavLink[] = [
     { to: "/doctor", title: "Overview", icon: LayoutDashboard, exact: true },
     { to: "/doctor/calendar", title: "Calendar", icon: CalendarDays },
     { to: "/doctor/appointments", title: "Appointments", icon: CalendarDays },
@@ -95,6 +97,14 @@ const doctorLinks: Array<{
     { to: "/doctor/profile", title: "Profile", icon: UserRound },
     { to: "/doctor/account", title: "Account", icon: Settings },
   ];
+const doctorLinkGroups: Array<{ title: string; links: PortalNavLink[] }> = [
+  { title: "Today", links: doctorLinks.filter((link) => ["/doctor", "/doctor/calendar", "/doctor/appointments"].includes(link.to)) },
+  { title: "Patient care", links: doctorLinks.filter((link) => ["/doctor/patients", "/doctor/prescriptions"].includes(link.to)) },
+  { title: "Practice", links: doctorLinks.filter((link) => ["/doctor/availability", "/doctor/services", "/doctor/integrations", "/doctor/payments", "/doctor/notifications"].includes(link.to)) },
+  { title: "Settings", links: doctorLinks.filter((link) => ["/doctor/profile", "/doctor/account"].includes(link.to)) },
+];
+
+export { BookingPage };
 
 export function PortalLayout({ role }: { role: Role }) {
   const { user, signOut } = useAuth();
@@ -105,7 +115,12 @@ export function PortalLayout({ role }: { role: Role }) {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const doctor = role === "DOCTOR";
-  const links = doctor ? doctorLinks : patientLinks;
+  const renderNavLink = (link: PortalNavLink) => {
+    const active = link.exact ? path === link.to : path === link.to || path.startsWith(`${link.to}/`);
+    return <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className={`nav-item${active ? " active" : ""}`} aria-current={active ? "page" : undefined}>
+      <link.icon size={17} aria-hidden="true" /><span>{link.title}</span>
+    </Link>;
+  };
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -153,13 +168,13 @@ export function PortalLayout({ role }: { role: Role }) {
         </div>
 
         <nav className="sidebar-nav" aria-label="Workspace">
-          <p className="nav-section-title">{doctor ? "Practice" : "Your care"}</p>
-          {links.map((link) => {
-            const active = link.exact ? path === link.to : path === link.to || path.startsWith(`${link.to}/`);
-            return <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className={`nav-item${active ? " active" : ""}`} aria-current={active ? "page" : undefined}>
-              <link.icon size={17} aria-hidden="true" /><span>{link.title}</span>
-            </Link>;
-          })}
+          {doctor ? doctorLinkGroups.map((group) => <div className="doctor-nav-group" key={group.title}>
+            <p className="doctor-nav-group-title">{group.title}</p>
+            {group.links.map(renderNavLink)}
+          </div>) : patientLinkGroups.map((group) => <div className="patient-nav-group" key={group.title}>
+            <p className="nav-group-label">{group.title}</p>
+            {group.links.map(renderNavLink)}
+          </div>)}
         </nav>
 
         <div className="sidebar-footer">
@@ -413,21 +428,22 @@ function AppointmentRows({
     return belongs && target.includes(query.trim().toLowerCase());
   });
   const ordered = [...visible].sort(
-    (a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+    (a, b) => view === "Past"
+      ? new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime()
+      : new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
   );
   return (
     <>
       <div className="appointment-tools">
         <div
           className="appointment-filters"
-          role="tablist"
+          role="group"
           aria-label="Filter appointments"
         >
           {(["Upcoming", "Today", "Past"] as const).map((name) => (
             <button
               type="button"
-              role="tab"
-              aria-selected={view === name}
+              aria-pressed={view === name}
               className={view === name ? "active" : ""}
               key={name}
               onClick={() => setView(name)}
@@ -631,8 +647,8 @@ function AppointmentRows({
   );
 }
 export function PortalHome({ role }: { role: Role }) {
-  const { user } = useAuth();
   const doctor = role === "DOCTOR";
+  const { user } = useAuth();
   const [data, setData] = useState<{
     appointments: Appointment[];
     counts: Record<string, string | number>;
@@ -684,16 +700,21 @@ export function PortalHome({ role }: { role: Role }) {
         !["CANCELLED", "NO_SHOW"].includes(appointment.status)
       );
     }) ?? [];
+  const patientFirstName = user?.fullName?.trim().split(/\s+/)[0] || "there";
+  const dayPart = new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening";
 
   return (
-    <main className="portal-content">
+    <main className={`portal-content ${doctor ? "doctor-dashboard" : "patient-dashboard"}`}>
       <div className="page-header">
-        <div className="greeting">{`${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 17 ? "Good afternoon" : "Good evening"}, ${doctor ? "Dr. Kiran" : user?.fullName ? user.fullName.split(" ")[0] : "there"}`}</div>
-        <p>
-          {doctor
-            ? "Today's appointments and workspace overview."
-            : "Your care information, in one private place."}
-        </p>
+        {doctor ? (
+          <div className="greeting">{`${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 17 ? "Good afternoon" : "Good evening"}, Dr. Kiran`}</div>
+        ) : (
+          <>
+            <span className="eyebrow patient-welcome-eyebrow">A LITTLE SPACE FOR YOUR HEALTH</span>
+            <h1>Good {dayPart}, {patientFirstName}</h1>
+          </>
+        )}
+        <p>{doctor ? "Today's appointments and workspace overview." : "Appointments, reports and prescriptions connected to your care."}</p>
       </div>
       <Status
         loading={loading}
@@ -723,13 +744,8 @@ export function PortalHome({ role }: { role: Role }) {
                 </div>
                 <div className="doctor-quick-stats">
                   <article>
-                    <span>Requests to review</span>
-                    <strong>{pendingRequests.length}</strong>
-                    <small>Awaiting your response</small>
-                  </article>
-                  <article>
                     <span>Today’s visits</span>
-                    <strong>{todayAppointments.length}</strong>
+                    <strong>{data.counts.today ?? 0}</strong>
                     <small>Scheduled for today</small>
                   </article>
                   <article>
@@ -896,11 +912,12 @@ export function PortalHome({ role }: { role: Role }) {
               </section>
             ) : (
               <section className="next-step-card">
-                <h3>YOUR NEXT STEP</h3>
+                <h3>{nextAppt?.status === "PENDING" ? "REQUEST STATUS" : "YOUR NEXT STEP"}</h3>
                 {nextAppt ? (
                   <div className="content">
-                    <h2 className="next-step-title">Next appointment</h2>
-                    <p className="next-step-subtitle">Dr. Kiran</p>
+                    <h2 className="next-step-title">{nextAppt.status === "PENDING" ? "Request awaiting a response" : "Next appointment"}</h2>
+                    <p className="next-step-subtitle">{nextAppt.doctor_name ?? nextAppt.doctorName ?? "Dr. Kiran"}</p>
+                    <span className={`status-pill status-${nextAppt.status.toLowerCase()}`}>{nextAppt.status.replaceAll("_", " ")}</span>
                     <div className="appointment-details">
                       <div className="next-step-info">
                         <div>
@@ -916,7 +933,6 @@ export function PortalHome({ role }: { role: Role }) {
                           <Link
                             to={`/patient/appointments/${nextAppt.id}`}
                             className="btn btn-secondary"
-                            style={{ background: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}
                           >
                             View appointment
                           </Link>
@@ -925,16 +941,14 @@ export function PortalHome({ role }: { role: Role }) {
                               href={safeGoogleMeetUrl(nextAppt.meeting_url)!}
                               target="_blank"
                               rel="noreferrer"
-                              className="btn btn-primary"
-                              style={{ background: 'white', color: 'var(--color-brand-active)' }}
+                              className="btn btn-primary patient-action-light"
                             >
                               Join Meet
                             </a>
                           )}
                           <Link
                             to="/patient/book"
-                            className="btn btn-secondary"
-                            style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.4)', color: 'white' }}
+                            className="btn btn-secondary patient-action-outline"
                           >
                             Book another visit
                           </Link>
@@ -950,8 +964,7 @@ export function PortalHome({ role }: { role: Role }) {
                     </p>
                     <Link
                       to="/patient/book"
-                      className="btn btn-primary"
-                      style={{ background: 'white', color: 'var(--color-brand-active)', border: 'none' }}
+                      className="btn btn-primary patient-action-light"
                     >
                       Book a consultation
                     </Link>
@@ -961,19 +974,24 @@ export function PortalHome({ role }: { role: Role }) {
             )}
 
             {!doctor && (
-              <div className="stats-grid">
-                {Object.entries(data.counts).map(([key, val]) => (
-                  <div className="stat-card" key={key}>
-                    <span>{key.replaceAll("_", " ")}</span>
-                    <strong>{val}</strong>
-                  </div>
+              <div className="patient-care-links" aria-label="Your care records">
+                {([
+                  ["appointments", "Appointments", "/patient/appointments"],
+                  ["reports", "Reports", "/patient/reports"],
+                  ["prescriptions", "Prescriptions", "/patient/prescriptions"],
+                ] as const).map(([key, label, to]) => (
+                  <Link className="patient-care-link" to={to} key={key}>
+                    <span>{label}</span>
+                    <strong>{data.counts[key] ?? 0}</strong>
+                    <small>{key === "appointments" ? "All visits" : key === "reports" ? "Shared documents" : "Issued by the practice"}</small>
+                  </Link>
                 ))}
               </div>
             )}
 
             {!doctor && (
               <section
-                className="card"
+                className="card patient-upcoming-panel"
                 style={{ padding: "0", overflow: "hidden" }}
               >
                 <div
@@ -1222,28 +1240,35 @@ function CareHistoryPage() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [partialError, setPartialError] = useState("");
 
   const [reload, setReload] = useState(0);
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    Promise.all([
+    Promise.allSettled([
       api<{ appointments: Appointment[] }>("/portal/appointments"),
       api<{ records: Record<string, unknown>[] }>("/portal/records"),
       api<{ prescriptions: Record<string, unknown>[] }>(
         "/portal/prescriptions",
       ),
-    ])
-      .then(([a, r, p]) => {
-        if (alive)
-          setData({
-            appointments: a.appointments || [],
-            records: r.records || [],
-            prescriptions: p.prescriptions || [],
-          });
-      })
-      .catch(() => {
-        if (alive) setError("Could not load history.");
+    ] as const)
+      .then(([appointmentsResult, recordsResult, prescriptionsResult]) => {
+        if (!alive) return;
+        const fulfilled = [appointmentsResult, recordsResult, prescriptionsResult]
+          .filter((result) => result.status === "fulfilled").length;
+        if (!fulfilled) {
+          setError("Could not load your care history. Check your connection and try again.");
+          setPartialError("");
+          return;
+        }
+        setData({
+          appointments: appointmentsResult.status === "fulfilled" ? appointmentsResult.value.appointments || [] : [],
+          records: recordsResult.status === "fulfilled" ? recordsResult.value.records || [] : [],
+          prescriptions: prescriptionsResult.status === "fulfilled" ? prescriptionsResult.value.prescriptions || [] : [],
+        });
+        setError("");
+        setPartialError(fulfilled < 3 ? "Some parts of your care history could not be loaded." : "");
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -1279,7 +1304,7 @@ function CareHistoryPage() {
         type: "Report",
         title: `Report uploaded: ${r.original_filename}`,
         subtitle: dateTime(String(r.created_at)),
-        link: `${import.meta.env.VITE_API_URL || ''}/api/portal/records/${encodeURIComponent(String(r.id))}/download?view=1`,
+        link: `${apiBaseUrl}/api/portal/records/${encodeURIComponent(String(r.id))}/download?view=1`,
       }),
     );
     data.prescriptions.forEach((p) =>
@@ -1306,6 +1331,10 @@ function CareHistoryPage() {
         error={error}
         onRetry={() => setReload((x) => x + 1)}
       >
+        {partialError && <div className="patient-partial-warning" role="status">
+          <span>{partialError}</span>
+          <button type="button" className="text-button" onClick={() => setReload((x) => x + 1)}>Retry</button>
+        </div>}
         {timeline.length ? (
           <div className="card" style={{ padding: "32px" }}>
             <div className="timeline">
@@ -1323,7 +1352,7 @@ function CareHistoryPage() {
                       {item.title}
                     </strong>
                     {item.link &&
-                      (item.link.startsWith("/api") ? (
+                      (item.type === "Report" ? (
                         <a
                           href={item.link}
                           target="_blank"
@@ -1342,6 +1371,8 @@ function CareHistoryPage() {
               ))}
             </div>
           </div>
+        ) : partialError ? (
+          <Empty title="Care history is incomplete" text="The information we could load is empty. Retry to check for the remaining records." />
         ) : (
           <div className="empty-state">
             <div className="icon">
@@ -2395,7 +2426,7 @@ function RecordList({ records }: { records: Record<string, unknown>[] }) {
             <small>Added {dateTime(String(r.created_at))}</small>
             <div>
               <a
-                href={`${import.meta.env.VITE_API_URL || ''}/api/portal/records/${encodeURIComponent(String(r.id))}/download?view=1`}
+                href={`${apiBaseUrl}/api/portal/records/${encodeURIComponent(String(r.id))}/download?view=1`}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -2474,6 +2505,7 @@ function NotificationsPage({
 }) {
   const path = useLocation().pathname;
   const [actionError, setActionError] = useState("");
+  const [busyId, setBusyId] = useState("");
   const labels: Record<string, string> = {
     APPOINTMENT_REQUESTED: "New appointment request",
     APPOINTMENT_ACCEPTED: "Your appointment was accepted",
@@ -2483,6 +2515,7 @@ function NotificationsPage({
   };
   async function markRead(id: string) {
     setActionError("");
+    setBusyId(id);
     try {
       await api(`/portal/notifications/${id}/read`, {
         method: "PATCH",
@@ -2493,6 +2526,8 @@ function NotificationsPage({
       setActionError(
         e instanceof ApiError ? e.message : "Could not update notification.",
       );
+    } finally {
+      setBusyId("");
     }
   }
   return (
@@ -2531,8 +2566,8 @@ function NotificationsPage({
                     </Link>
                   )}
                   {!Boolean(n.read_at) && (
-                    <button onClick={() => void markRead(String(n.id))}>
-                      Mark read
+                    <button disabled={busyId === String(n.id)} onClick={() => void markRead(String(n.id))}>
+                      {busyId === String(n.id) ? "Marking read…" : "Mark read"}
                     </button>
                   )}
                 </div>
@@ -2567,7 +2602,9 @@ function PaymentsPage({
       <div className="eyebrow">PAYMENT HISTORY</div>
       <h1>Payments</h1>
       <p className="page-subtitle">
-        A clear record of consultation charges and payment status.
+        {role === "PATIENT"
+          ? "Review payment records associated with your care. This portal does not process online payments."
+          : "Review payment records associated with the practice."}
       </p>
       <Status loading={loading} error={error} onRetry={retry}>
         {payments.length ? (
@@ -2601,8 +2638,10 @@ function PaymentsPage({
           </div>
         ) : (
           <Empty
-            title="No payment records"
-            text="There are no consultation payments to show yet."
+            title={role === "PATIENT" ? "No payment history" : "No payment records"}
+            text={role === "PATIENT"
+              ? "There are no payment records associated with your account. Online payment is not available here."
+              : "There are no payment records associated with the practice."}
           />
         )}
       </Status>
@@ -2670,7 +2709,7 @@ function IntegrationsPage() {
       setBusy(false);
     }
   }
-  const callbackUrl = `${import.meta.env.VITE_API_URL || window.location.origin}/api/integrations/google/callback`;
+  const callbackUrl = `${apiBaseUrl || window.location.origin}/api/integrations/google/callback`;
   return (
     <main className="portal-content">
       <div className="eyebrow">PRACTICE SETTINGS</div>
@@ -2746,7 +2785,7 @@ function IntegrationsPage() {
                 className={`btn btn-primary ${status?.configured ? "" : "disabled-link"}`}
                 href={
                   status?.configured
-                    ? `${import.meta.env.VITE_API_URL || ''}/api/integrations/google/connect`
+                    ? `${apiBaseUrl}/api/integrations/google/connect`
                     : undefined
                 }
                 aria-disabled={!status?.configured}
@@ -3359,708 +3398,6 @@ function ServicesPage() {
               {notice}
             </p>
           )}
-        </>
-      )}
-    </main>
-  );
-}
-
-function clinicToday(zone?: string | null) {
-  // Older/local doctor records may have an empty or invalid timezone. Keep the
-  // booking page renderable and let the API surface any corresponding setup issue.
-  let safeZone = "Asia/Kolkata";
-  if (typeof zone === "string" && zone.trim()) {
-    try {
-      new Intl.DateTimeFormat("en", { timeZone: zone }).format();
-      safeZone = zone;
-    } catch {
-      /* use the clinic's default timezone */
-    }
-  }
-  const p = Object.fromEntries(
-    new Intl.DateTimeFormat("en-CA", {
-      timeZone: safeZone,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    })
-      .formatToParts(new Date())
-      .map((x) => [x.type, x.value]),
-  );
-  return `${p.year}-${p.month}-${p.day}`;
-}
-export function BookingPage() {
-  const [services, setServices] = useState<Service[]>([]),
-    [serviceId, setServiceId] = useState(""),
-    [date, setDate] = useState(clinicToday()),
-    [slots, setSlots] = useState<Array<{ startsAt: string; endsAt: string }>>(
-      [],
-    ),
-    [selected, setSelected] = useState(""),
-    [method, setMethod] = useState(""),
-    [problem, setProblem] = useState(""),
-    [symptoms, setSymptoms] = useState(""),
-    [severity, setSeverity] = useState(""),
-    [loading, setLoading] = useState(true),
-    [slotsLoading, setSlotsLoading] = useState(false),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState(""),
-    [message, setMessage] = useState(""),
-    [step, setStep] = useState(0),
-    [servicesReload, setServicesReload] = useState(0),
-    [serviceLoadError, setServiceLoadError] = useState("");
-  const [attachment, setAttachment] = useState<File | null>(null),
-    [attachmentCategory, setAttachmentCategory] = useState("Prescription"),
-    [appointmentId, setAppointmentId] = useState(""),
-    [attachmentError, setAttachmentError] = useState("");
-  const [submitted, setSubmitted] = useState<{
-    id: string;
-    status: string;
-  } | null>(null);
-  useEffect(() => {
-    let alive = true;
-    setServiceLoadError("");
-    api<{ services: Service[] }>("/booking/services")
-      .then((x) => {
-        if (alive) {
-          const available = normalizeServices(x.services);
-          setServices(available);
-          setServiceId(available[0]?.id ?? "");
-          setMethod(available[0]?.methods[0] ?? "");
-        }
-      })
-      .catch((e) => {
-        if (alive) {
-          const reason =
-            e instanceof ApiError
-              ? e.message
-              : "Could not load consultation services.";
-          setError(reason);
-          setServiceLoadError(reason);
-        }
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [servicesReload]);
-  useEffect(() => {
-    if (!serviceId || !date) return;
-    let alive = true;
-    setError("");
-    setSlotsLoading(true);
-    setSlots([]);
-    setSelected("");
-    api<{ slots: Array<{ startsAt: string; endsAt: string }> }>(
-      `/booking/slots?${new URLSearchParams({ serviceId, date })}`,
-    )
-      .then((x) => {
-        if (alive) setSlots(x.slots);
-      })
-      .catch((e) => {
-        if (alive)
-          setError(
-            e instanceof ApiError
-              ? e.message
-              : "Could not load available times.",
-          );
-      })
-      .finally(() => {
-        if (alive) setSlotsLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [serviceId, date]);
-  const service = services.find((s) => s.id === serviceId),
-    chosen = slots.find((s) => s.startsAt === selected);
-  async function uploadAttachment(forAppointmentId: string) {
-    if (!attachment) return;
-    if (attachment.size > 8 * 1024 * 1024)
-      throw new Error("Choose a file up to 8 MB.");
-    if (
-      !["application/pdf", "image/jpeg", "image/png"].includes(attachment.type)
-    )
-      throw new Error("Choose a PDF, JPG, or PNG file.");
-    await api("/portal/records", {
-      method: "POST",
-      body: attachment,
-      headers: {
-        "Content-Type": attachment.type,
-        "X-Upload-Name": encodeURIComponent(attachment.name),
-        "X-Upload-Category": attachmentCategory,
-        "X-Appointment-Id": forAppointmentId,
-      },
-    });
-    setAttachment(null);
-    setAttachmentError("");
-    const input = document.getElementById(
-      "booking-prescription-file",
-    ) as HTMLInputElement | null;
-    if (input) input.value = "";
-  }
-  function nextStep() {
-    setError("");
-    if (step === 0 && (!service || !method)) {
-      setError("Choose a consultation and method to continue.");
-      return;
-    }
-    if (step === 1 && (!date || !chosen)) {
-      setError("Choose an available date and time to continue.");
-      return;
-    }
-    if (step === 2 && !problem.trim()) {
-      setError("Tell the doctor what you would like help with.");
-      return;
-    }
-    setStep((x) => Math.min(3, x + 1));
-  }
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    if (!service || !chosen || !problem.trim()) {
-      setError("Review the service, time, and reason for your visit.");
-      return;
-    }
-    setBusy(true);
-    setError("");
-    setMessage("");
-    setAttachmentError("");
-    try {
-      const result = await api<{
-        message: string;
-        appointment: { id: string; status: string };
-      }>("/booking/appointments", {
-        method: "POST",
-        body: JSON.stringify({
-          serviceId,
-          startsAt: selected,
-          method,
-          intake: {
-            problemDescription: problem.trim(),
-            symptoms: symptoms.trim(),
-            severity: severity ? Number(severity) : null,
-          },
-        }),
-      });
-      const newAppointmentId = result.appointment.id;
-      setAppointmentId(newAppointmentId);
-      setSubmitted({ id: newAppointmentId, status: result.appointment.status });
-      setMessage(result.message);
-      if (attachment) {
-        try {
-          await uploadAttachment(newAppointmentId);
-          setMessage("Your request was sent and your file was attached.");
-        } catch (err) {
-          setAttachmentError(
-            err instanceof ApiError
-              ? err.message
-              : err instanceof Error
-                ? err.message
-                : "The request was sent, but the file could not be attached. Retry below or upload it from Reports.",
-          );
-        }
-      }
-      try {
-        const refreshed = await api<{
-          slots: Array<{ startsAt: string; endsAt: string }>;
-        }>(`/booking/slots?${new URLSearchParams({ serviceId, date })}`);
-        setSlots(refreshed.slots);
-      } catch {
-        /* The appointment is already saved. */
-      }
-    } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Could not submit your appointment request.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function retryAttachment() {
-    if (!appointmentId || !attachment) return;
-    setBusy(true);
-    setAttachmentError("");
-    try {
-      await uploadAttachment(appointmentId);
-      setMessage("Your file is attached to the appointment request.");
-    } catch (err) {
-      setAttachmentError(
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Could not attach this file. Try again or upload it from Reports.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-  function startAnother() {
-    setSubmitted(null);
-    setAppointmentId("");
-    setStep(0);
-    setProblem("");
-    setSymptoms("");
-    setSeverity("");
-    setSelected("");
-    setMessage("");
-    setError("");
-    setAttachment(null);
-    setAttachmentError("");
-  }
-  const steps = ["Consultation", "Date & time", "Your concern", "Review"];
-  return (
-    <main className="portal-content booking-page">
-      <div className="eyebrow">PATIENT BOOKING</div>
-      <h1>{submitted ? "Request received" : "Book a consultation"}</h1>
-      <p className="page-subtitle">
-        {submitted
-          ? "Your request is in the practice’s queue. We’ll show updates in Appointments."
-          : "Choose a visit and time that work for you. Your details stay with your private care record."}
-      </p>
-      {loading ? (
-        <div className="empty-state" role="status">
-          Loading available consultations…
-        </div>
-      ) : serviceLoadError ? (
-        <section className="empty-state empty-state-error">
-          <p role="alert">{serviceLoadError}</p>
-          <button
-            className="btn btn-secondary"
-            onClick={() => {
-              setLoading(true);
-              setServicesReload((x) => x + 1);
-            }}
-          >
-            Try again
-          </button>
-        </section>
-      ) : !services.length ? (
-        <section className="empty-state">
-          <span className="empty-symbol">
-            <CalendarDays size={22} />
-          </span>
-          <h2>Online booking is being set up</h2>
-          <p>
-            The practice has not configured an active consultation service yet.
-            Please check back later.
-          </p>
-        </section>
-      ) : submitted ? (
-        <section className="booking-success">
-          <div className="booking-success-icon">
-            <CheckCircle2 size={23} />
-          </div>
-          <span className="eyebrow">
-            REQUEST {submitted.status.replaceAll("_", " ")}
-          </span>
-          <h2>We’ve sent your appointment request.</h2>
-          <p>
-            {message ||
-              "The practice will review your request. It is not confirmed until the doctor responds."}
-          </p>
-          <dl className="booking-summary">
-            <div>
-              <dt>Consultation</dt>
-              <dd>
-                {service?.name ?? "Consultation"} ·{" "}
-                {method.replaceAll("_", " ")}
-              </dd>
-            </div>
-            <div>
-              <dt>Requested time</dt>
-              <dd>
-                {chosen
-                  ? dateTime(chosen.startsAt)
-                  : new Intl.DateTimeFormat(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  }).format(new Date(selected))}
-              </dd>
-            </div>
-            <div>
-              <dt>Request reference</dt>
-              <dd>{submitted.id}</dd>
-            </div>
-            <div>
-              <dt>Payment</dt>
-              <dd>No payment collected</dd>
-            </div>
-          </dl>
-          {attachmentError && (
-            <div className="form-error" role="alert">
-              <p>{attachmentError}</p>
-              {attachment && (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  disabled={busy}
-                  onClick={() => void retryAttachment()}
-                >
-                  Retry attaching file
-                </button>
-              )}
-            </div>
-          )}
-          <div className="portal-actions">
-            <Link
-              className="btn btn-primary"
-              to={`/patient/appointments/${submitted.id}`}
-            >
-              View appointment
-            </Link>
-            <button className="btn btn-secondary" onClick={startAnother}>
-              Book another visit
-            </button>
-          </div>
-        </section>
-      ) : (
-        <>
-          <ol className="booking-progress" aria-label="Booking steps">
-            {steps.map((label, index) => (
-              <li
-                key={label}
-                className={
-                  index === step ? "current" : index < step ? "done" : ""
-                }
-              >
-                <span>{index < step ? "✓" : index + 1}</span>
-                <strong>{label}</strong>
-              </li>
-            ))}
-          </ol>
-          <form
-            className="booking-form booking-wizard"
-            onSubmit={
-              step === 3
-                ? submit
-                : (e) => {
-                  e.preventDefault();
-                  nextStep();
-                }
-            }
-          >
-            <div className="booking-step-heading">
-              <span className="eyebrow">
-                STEP {step + 1} OF {steps.length}
-              </span>
-              <h2>
-                {
-                  [
-                    "Choose your consultation",
-                    "Choose a date and time",
-                    "What would you like to discuss?",
-                    "Review your request",
-                  ][step]
-                }
-              </h2>
-              <p>
-                {
-                  [
-                    "Select the visit type that fits your needs. Only services currently offered by the practice are shown.",
-                    "Available times are based on the practice schedule. Times are shown in your local timezone.",
-                    "A short description helps the doctor prepare. You can add a relevant document if you have one.",
-                    "Check the details before sending your request to the practice.",
-                  ][step]
-                }
-              </p>
-            </div>
-            {step === 0 && (
-              <div className="booking-service-options">
-                {services.map((s) => (
-                  <button
-                    type="button"
-                    key={s.id}
-                    className={`booking-service-option ${serviceId === s.id ? "selected" : ""}`}
-                    onClick={() => {
-                      setServiceId(s.id);
-                      setMethod(s.methods[0] ?? "");
-                      setError("");
-                    }}
-                  >
-                    <span>
-                      <strong>{s.name}</strong>
-                      <small>
-                        {s.description || "Consultation with Dr. Kiran"} ·{" "}
-                        {s.duration_minutes} min
-                      </small>
-                    </span>
-                    <span className="booking-price">
-                      ₹{(Number(s.fee_paise) / 100).toFixed(2)}
-                    </span>
-                    {serviceId === s.id && <CheckCircle2 size={18} />}
-                  </button>
-                ))}
-                {service && (
-                  <fieldset className="form-group booking-methods">
-                    <legend>How would you like to connect?</legend>
-                    {service.methods.map((m) => (
-                      <label className="booking-method-option" key={m}>
-                        <input
-                          type="radio"
-                          name="booking-method"
-                          checked={method === m}
-                          onChange={() => setMethod(m)}
-                        />
-                        <span>
-                          <strong>{m.replaceAll("_", " ")}</strong>
-                          <small>
-                            {m === "GOOGLE_MEET"
-                              ? "Meet Dr. Kiran online."
-                              : m === "WHATSAPP"
-                                ? "Continue your consultation through WhatsApp."
-                                : "Visit the practice in person."}
-                          </small>
-                        </span>
-                      </label>
-                    ))}
-                  </fieldset>
-                )}
-              </div>
-            )}
-            {step === 1 && (
-              <div className="booking-time-panel">
-                <label>
-                  Date
-                  <select
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  >
-                    {Array.from({ length: 90 }, (_, i) => {
-                      const d = new Date(
-                        `${clinicToday(service?.timezone)}T12:00:00`,
-                      );
-                      d.setDate(d.getDate() + i);
-                      const value = new Intl.DateTimeFormat("en-CA", {
-                        timeZone: service?.timezone || "Asia/Kolkata",
-                      }).format(d);
-                      return (
-                        <option key={value} value={value}>
-                          {new Intl.DateTimeFormat(undefined, {
-                            weekday: "long",
-                            month: "short",
-                            day: "numeric",
-                          }).format(d)}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </label>
-                <div className="booking-time-meta">
-                  <strong>
-                    {date
-                      ? new Intl.DateTimeFormat(undefined, {
-                        dateStyle: "full",
-                      }).format(new Date(`${date}T12:00:00`))
-                      : "Choose a date"}
-                  </strong>
-                  <span>{service?.timezone || "Practice local time"}</span>
-                </div>
-                <fieldset className="slot-fieldset">
-                  <legend>Available times</legend>
-                  {slotsLoading ? (
-                    <p role="status">Checking open times…</p>
-                  ) : !slots.length ? (
-                    <div className="booking-no-slots">
-                      <p>No open times on this date.</p>
-                      <small>Try another date within the next 90 days.</small>
-                    </div>
-                  ) : (
-                    <div className="slot-grid">
-                      {slots.map((slot) => (
-                        <button
-                          className={`slot-choice ${selected === slot.startsAt ? "selected" : ""}`}
-                          type="button"
-                          key={slot.startsAt}
-                          aria-pressed={selected === slot.startsAt}
-                          onClick={() => setSelected(slot.startsAt)}
-                        >
-                          {new Intl.DateTimeFormat(undefined, {
-                            timeStyle: "short",
-                          }).format(new Date(slot.startsAt))}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </fieldset>
-              </div>
-            )}
-            {step === 2 && (
-              <div className="booking-concern-fields">
-                <label>
-                  What would you like help with?
-                  <textarea
-                    autoFocus
-                    required
-                    maxLength={3000}
-                    rows={4}
-                    value={problem}
-                    onChange={(e) => setProblem(e.target.value)}
-                    placeholder="For example, what has changed or what would you like to understand?"
-                  />
-                  <small>
-                    Keep it brief. You can share more during your consultation.
-                  </small>
-                </label>
-                <label>
-                  Symptoms or questions{" "}
-                  <span className="optional-label">Optional</span>
-                  <textarea
-                    maxLength={3000}
-                    rows={3}
-                    value={symptoms}
-                    onChange={(e) => setSymptoms(e.target.value)}
-                  />
-                </label>
-                <label>
-                  How severe does it feel?{" "}
-                  <span className="optional-label">Optional</span>
-                  <select
-                    value={severity}
-                    onChange={(e) => setSeverity(e.target.value)}
-                  >
-                    <option value="">Choose a level</option>
-                    {Array.from({ length: 10 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {i + 1} / 10
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <fieldset className="booking-attachment">
-                  <legend>
-                    Add a supporting document{" "}
-                    <span className="optional-label">Optional</span>
-                  </legend>
-                  <p>
-                    PDF, JPG, or PNG up to 8 MB. The file is private to you and
-                    the practice connected to your appointment.
-                  </p>
-                  <label>
-                    Document type
-                    <select
-                      value={attachmentCategory}
-                      onChange={(e) => setAttachmentCategory(e.target.value)}
-                    >
-                      <option>Prescription</option>
-                      <option>Lab report</option>
-                      <option>Imaging</option>
-                      <option>Other</option>
-                    </select>
-                  </label>
-                  <label className="file-picker-label">
-                    Choose a file
-                    <input
-                      id="booking-prescription-file"
-                      type="file"
-                      accept="application/pdf,image/jpeg,image/png"
-                      onChange={(e) => {
-                        setAttachment(e.target.files?.[0] ?? null);
-                        setAppointmentId("");
-                        setAttachmentError("");
-                      }}
-                    />
-                  </label>
-                  {attachment && (
-                    <small className="selected-file">
-                      Selected: {attachment.name}
-                    </small>
-                  )}
-                </fieldset>
-              </div>
-            )}
-            {step === 3 && (
-              <div className="booking-review">
-                <div className="booking-review-main">
-                  <dl className="booking-summary">
-                    <div>
-                      <dt>Consultation</dt>
-                      <dd>{service?.name}</dd>
-                    </div>
-                    <div>
-                      <dt>Doctor</dt>
-                      <dd>Dr. Kiran</dd>
-                    </div>
-                    <div>
-                      <dt>Date & time</dt>
-                      <dd>
-                        {chosen ? dateTime(chosen.startsAt) : "Choose a time"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Method</dt>
-                      <dd>{method.replaceAll("_", " ")}</dd>
-                    </div>
-                    <div>
-                      <dt>Your concern</dt>
-                      <dd>{problem}</dd>
-                    </div>
-                    <div>
-                      <dt>Supporting document</dt>
-                      <dd>{attachment?.name ?? "None added"}</dd>
-                    </div>
-                    <div>
-                      <dt>Consultation fee</dt>
-                      <dd>
-                        ₹
-                        {service
-                          ? (Number(service.fee_paise) / 100).toFixed(2)
-                          : "—"}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-                <aside className="booking-payment-note">
-                  <strong>Payment is not collected here</strong>
-                  <p>
-                    This booking request does not charge you. The practice will
-                    respond to the request through your appointments.
-                  </p>
-                </aside>
-              </div>
-            )}
-            {error && (
-              <p className="form-error" role="alert">
-                {error}
-              </p>
-            )}
-            <div className="booking-wizard-actions">
-              {step > 0 && (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  disabled={busy}
-                  onClick={() => {
-                    setError("");
-                    setStep((x) => x - 1);
-                  }}
-                >
-                  Back
-                </button>
-              )}
-              {step < 3 ? (
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={slotsLoading}
-                >
-                  {step === 2 ? "Review request" : "Continue"}
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={busy || !selected || !problem.trim()}
-                >
-                  {busy ? "Sending request…" : "Send appointment request"}
-                </button>
-              )}
-            </div>
-          </form>
         </>
       )}
     </main>

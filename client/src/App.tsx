@@ -13,7 +13,7 @@ const PortalHome = lazy(() => import('./pages/PortalPage').then((page) => ({ def
 const PortalSection = lazy(() => import('./pages/PortalPage').then((page) => ({ default: page.PortalSection })));
 const AppointmentDetail = lazy(() => import('./pages/PortalPage').then((page) => ({ default: page.AppointmentDetail })));
 const PatientDetail = lazy(() => import('./pages/PortalPage').then((page) => ({ default: page.PatientDetail })));
-const BookingPage = lazy(() => import('./pages/PortalPage').then((page) => ({ default: page.BookingPage })));
+const BookingPage = lazy(() => import('./patient/BookingPage'));
 const StaticPage = lazy(() => import('./pages/StaticPage'));
 
 function RouteLoading() {

@@ -2,14 +2,14 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, HeartPulse, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
-import { api, ApiError } from '../lib/api';
+import { api, apiBaseUrl, ApiError } from '../lib/api';
 
 type Props = { mode: 'login' | 'register' };
 type LoginUser = { id?: string; role: 'PATIENT' | 'DOCTOR' | 'ADMIN' };
 
 export default function AuthPage({ mode }: Props) {
   const isRegister = mode === 'register';
-  const { user, refresh } = useAuth();
+  const { user, refresh, sessionCheckFailed } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [search] = useSearchParams();
@@ -29,6 +29,7 @@ export default function AuthPage({ mode }: Props) {
     const authError = search.get('auth_error');
     if (authError === 'google_not_configured') setError('Google sign-in is not configured yet. Use email or phone, or add the Google OAuth settings to the server.');
     else if (authError) setError('Google sign-in did not complete. Please try again or use another sign-in method.');
+    else if (search.get('google') === 'success') setNotice('You’re signed in with Google. Opening your care space…');
   }, [search]);
 
   if (user) return <Navigate to={user.role === 'PATIENT' ? '/patient' : user.role === 'DOCTOR' ? '/doctor' : '/'} replace />;
@@ -69,6 +70,11 @@ export default function AuthPage({ mode }: Props) {
     finally { setBusy(false); }
   }
 
+  function submitPhone(event: FormEvent<HTMLFormElement>) {
+    if (!codeSent) { event.preventDefault(); void sendPhoneCode(); return; }
+    void verifyPhone(event);
+  }
+
   return (
     <main className="auth-page">
       <aside className={`auth-story${clinicianLogin ? ' auth-story-clinician' : ''}`}>
@@ -92,13 +98,18 @@ export default function AuthPage({ mode }: Props) {
           <h2>{isRegister ? 'Create your account' : clinicianLogin ? 'Welcome, doctor' : 'Welcome back'}</h2>
           <p className="auth-intro">{isRegister ? 'Create a patient account to continue to your care.' : clinicianLogin ? 'Sign in to manage your schedule and patient care.' : 'Sign in to access your care and appointments.'}</p>
 
+          {sessionCheckFailed && <div role="status" className="auth-alert auth-session-alert">
+            We couldn’t confirm an existing session because the care service did not respond. You can retry, or continue signing in below.
+            <button type="button" className="auth-resend" onClick={() => void refresh()}>Retry session check</button>
+          </div>}
+
           {!isRegister && search.get('reset') === 'success' && (
-            <div role="status" className="p-4 mb-6 text-sm font-medium text-teal-800 bg-teal-50 border border-teal-100 rounded-xl">
+            <div role="status" className="auth-notice auth-reset-success">
               Your password has been updated. You can sign in now.
             </div>
           )}
 
-          <a href={`${import.meta.env.VITE_API_URL || ''}/api/auth/google`} className="auth-google">
+          <a href={`${apiBaseUrl}/api/auth/google`} className="auth-google">
             <svg aria-hidden="true" viewBox="0 0 24 24" className="w-5 h-5">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
               <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -131,7 +142,7 @@ export default function AuthPage({ mode }: Props) {
               </button>
             </form>
           ) : (
-            <form className="auth-fields" onSubmit={verifyPhone}>
+            <form className="auth-fields" onSubmit={submitPhone}>
               <label>Mobile number<input type="tel" autoComplete="tel" required maxLength={16} placeholder="+91 98765 43210" value={phone} onChange={(e) => { setPhone(e.target.value); setCodeSent(false); }} /><span className="auth-hint">Include your country code.</span></label>
 
               {(isRegister || fullName || email || codeSent) && (

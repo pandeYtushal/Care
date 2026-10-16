@@ -106,6 +106,7 @@ export default function LegalPage({ type }: LegalPageProps) {
   };
 
   const data = content[type];
+  const legal = type === 'privacy' || type === 'terms';
 
   // Map type to an icon
   const getIcon = () => {
@@ -133,29 +134,30 @@ export default function LegalPage({ type }: LegalPageProps) {
       </header>
 
       <main>
-        <div className="static-page__hero">
+        <div className={`static-page__hero static-page__hero--${type}`}>
           <div className="static-page__hero-inner">
-            <div className="static-page__icon">{getIcon()}</div>
-            <h1>
-              {data.title}
-            </h1>
-            <p>{data.date}</p>
+            <div className="static-page__hero-copy">
+              <span className="static-page__eyebrow">{legal ? 'Practice information' : 'Meet the practice'}</span>
+              <h1>{data.title}</h1>
+              <p>{data.date}</p>
+            </div>
+            <div className="static-page__icon" aria-hidden="true">{getIcon()}</div>
           </div>
         </div>
 
         <div className="static-page__body">
-          <div>
+          <article className="static-page__article" aria-label={data.title}>
             {data.sections.map((section, idx) => (
               <section key={idx} className="static-page__section">
                 <span className="static-page__number">{String(idx + 1).padStart(2, '0')}</span>
                 <div><h2>{section.title}</h2><p>{section.body}</p></div>
               </section>
             ))}
-          </div>
+          </article>
 
           <div className="static-page__cta">
-            <Link to="/register" className="btn btn-primary">
-              Create your patient account <ArrowRight size={16} />
+            <Link to={legal ? '/' : '/patient/book'} className="btn btn-primary">
+              {legal ? 'Return to the practice' : 'View consultation options'} <ArrowRight size={16} />
             </Link>
           </div>
         </div>

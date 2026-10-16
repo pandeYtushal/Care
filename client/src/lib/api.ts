@@ -2,9 +2,13 @@ export class ApiError extends Error {
   constructor(message: string, public status: number) { super(message); this.name = 'ApiError'; }
 }
 
+// In development, keep requests same-origin so Vite sends them to its local
+// API proxy. This avoids accidentally signing in against a deployed API when
+// a developer's local environment contains a production VITE_API_URL.
+export const apiBaseUrl = import.meta.env.DEV ? '' : import.meta.env.VITE_API_URL || '';
+
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const baseUrl = import.meta.env.VITE_API_URL || '';
-  const response = await fetch(`${baseUrl}/api${path}`, {
+  const response = await fetch(`${apiBaseUrl}/api${path}`, {
     ...init,
     credentials: 'include',
     headers: { ...(init.body ? { 'Content-Type': 'application/json' } : {}), ...init.headers },

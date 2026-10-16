@@ -1,0 +1,466 @@
+/* Clinician-only workspace layer. Data, actions, route guards, and API contracts remain in the existing feature code. */
+.doctor-workspace {
+  --doctor-paper: #f5f5ef;
+  --doctor-surface: #fffefa;
+  --doctor-line: #e0e3d9;
+  --doctor-ink: #26382f;
+  --doctor-muted: #69786e;
+  --doctor-green: #3e7058;
+  --doctor-clay: #95654f;
+  color: var(--doctor-ink);
+  background: var(--doctor-paper);
+}
+
+.doctor-workspace .portal-sidebar {
+  width: 258px;
+  flex-basis: 258px;
+  background: #eff0e9;
+  border-right: 1px solid var(--doctor-line);
+  box-shadow: none;
+}
+.doctor-workspace .sidebar-header {
+  min-height: 76px;
+  padding-inline: 20px;
+  background: transparent;
+  border-color: var(--doctor-line);
+}
+.doctor-workspace .portal-brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: #e2ebe2;
+}
+.doctor-workspace .sidebar-nav {
+  gap: 3px;
+  padding: 13px 12px 20px;
+}
+.doctor-nav-group + .doctor-nav-group { margin-top: 13px; }
+.doctor-nav-group-title {
+  margin: 0 0 5px;
+  padding: 0 10px;
+  color: #768278;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.doctor-workspace .nav-item {
+  min-height: 42px;
+  border-radius: 9px;
+  color: #526258;
+  font-size: 12px;
+  font-weight: 550;
+}
+.doctor-workspace .nav-item:hover { color: #2d4a39; background: #e5e9e1; }
+.doctor-workspace .nav-item.active {
+  color: #2c503a;
+  background: #e1eae1;
+  box-shadow: inset 2px 0 #47775f;
+}
+.doctor-workspace .sidebar-footer { padding: 12px; }
+.doctor-workspace .user-profile-button,
+.doctor-workspace .portal-logout { border-radius: 9px; }
+.doctor-workspace .portal-topbar {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  min-height: 60px;
+  color: #536359;
+  border-color: var(--doctor-line);
+  background: rgb(255 254 250 / 95%);
+  backdrop-filter: blur(10px);
+}
+.doctor-workspace .portal-main,
+.doctor-workspace .portal-scroll-area,
+.doctor-workspace .portal-content { background: var(--doctor-paper); }
+.doctor-workspace .portal-content {
+  width: min(100%, 1400px);
+  padding: 30px clamp(22px, 3.3vw, 48px) 48px;
+}
+.doctor-workspace .portal-content > .page-header { margin-bottom: 25px; }
+.doctor-workspace .portal-content > .page-header .greeting,
+.doctor-workspace .portal-content > h1,
+.doctor-workspace .portal-content > .page-header h1 {
+  margin: 0;
+  color: var(--doctor-ink);
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3vw, 39px);
+  font-weight: 500;
+  letter-spacing: -.035em;
+  line-height: 1.12;
+}
+.doctor-workspace .portal-content > .page-header > p,
+.doctor-workspace .portal-content > .page-subtitle,
+.doctor-workspace .portal-content > p:not(.form-error):not(.form-notice) {
+  max-width: 68ch;
+  margin: 7px 0 0;
+  color: var(--doctor-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.doctor-workspace .portal-content > .eyebrow,
+.doctor-workspace .portal-content > .page-header .eyebrow {
+  margin-bottom: 7px;
+  color: #627c68;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .13em;
+}
+
+/* Operational overview: one real work queue, one next visit, one day agenda. */
+.doctor-workspace .doctor-dashboard-intro { gap: 17px; }
+.doctor-workspace .doctor-dashboard-heading {
+  align-items: center;
+  padding-bottom: 16px;
+  border-color: var(--doctor-line);
+}
+.doctor-workspace .doctor-dashboard-heading h2 {
+  margin: 2px 0 0;
+  color: var(--doctor-ink);
+  font-size: clamp(24px, 2.5vw, 31px);
+  letter-spacing: -.03em;
+}
+.doctor-workspace .doctor-dashboard-heading p { margin-top: 5px; color: var(--doctor-muted); font-size: 12px; }
+.doctor-workspace .doctor-dashboard-heading > .btn { min-height: 40px; border-radius: 9px; }
+.doctor-workspace .doctor-quick-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.doctor-workspace .doctor-quick-stats article {
+  min-height: 88px;
+  justify-content: center;
+  gap: 4px;
+  padding: 13px 15px;
+  border: 1px solid var(--doctor-line);
+  border-radius: 11px;
+  background: var(--doctor-surface);
+  box-shadow: 0 2px 8px rgb(38 52 46 / 2%);
+}
+.doctor-workspace .doctor-quick-stats article span { color: #69786e; font-size: 9px; letter-spacing: .075em; }
+.doctor-workspace .doctor-quick-stats article strong { color: #355d46; font-family: var(--font-sans); font-size: 26px; font-weight: 650; line-height: 1.2; }
+.doctor-workspace .doctor-quick-stats article small { color: #7b887f; font-size: 10px; }
+.doctor-workspace .doctor-focus-grid { grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr); gap: 12px; }
+.doctor-workspace .doctor-focus-card,
+.doctor-workspace .doctor-today-panel {
+  padding: 19px 20px;
+  border: 1px solid var(--doctor-line);
+  border-radius: 13px;
+  background: var(--doctor-surface);
+  box-shadow: 0 3px 12px rgb(38 52 46 / 3%);
+}
+.doctor-workspace .doctor-focus-title { align-items: center; margin-bottom: 12px; }
+.doctor-workspace .doctor-focus-title .eyebrow { color: #718073; font-size: 9px; }
+.doctor-workspace .doctor-focus-title h3 { margin: 3px 0 0; color: var(--doctor-ink); font-size: 21px; letter-spacing: -.025em; }
+.doctor-workspace .doctor-focus-title > a { min-height: 36px; display: inline-flex; align-items: center; color: #416b50; font-size: 11px; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+.doctor-workspace .doctor-clear-state { min-height: 70px; padding: 13px; border: 1px solid #e8ece4; border-radius: 10px; background: #f8f9f5; }
+.doctor-workspace .doctor-clear-state > svg { flex: 0 0 auto; color: #64826a; }
+.doctor-workspace .doctor-clear-state strong { color: #35483b; font-size: 12px; }
+.doctor-workspace .doctor-clear-state p { margin: 3px 0 0; color: var(--doctor-muted); font-size: 11px; line-height: 1.5; }
+.doctor-workspace .doctor-request-list article { grid-template-columns: minmax(0, 1fr) auto; padding-block: 11px; border-color: #e9ece5; }
+.doctor-workspace .doctor-request-list article > strong { color: #30443a; font-size: 13px; }
+.doctor-workspace .doctor-request-list article > p { color: var(--doctor-muted); font-size: 11px; }
+.doctor-workspace .doctor-request-time { color: #637369; font-size: 10px; }
+.doctor-workspace .doctor-request-actions .button { min-height: 36px; border-radius: 8px; }
+.doctor-workspace .doctor-next-card { background: #f0f4ed; }
+.doctor-workspace .doctor-next-card .doctor-next-time { color: #5c7163; font-size: 12px; }
+.doctor-workspace .doctor-next-patient { display: block; margin-top: 8px; color: #294234; font-size: 21px; letter-spacing: -.02em; }
+.doctor-workspace .doctor-next-card > p { margin: 3px 0 0; color: var(--doctor-muted); font-size: 12px; }
+.doctor-workspace .doctor-next-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.doctor-workspace .doctor-next-actions .btn,
+.doctor-workspace .doctor-next-actions .button { min-height: 39px; border-radius: 8px; font-size: 11px; }
+.doctor-workspace .doctor-agenda { display: grid; }
+.doctor-workspace .doctor-agenda article { grid-template-columns: 54px 10px minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 12px 0; border-color: #e8ebe4; }
+.doctor-workspace .doctor-agenda time { color: #53665a; font-size: 11px; font-variant-numeric: tabular-nums; }
+.doctor-workspace .doctor-agenda .agenda-visit strong { color: #30443a; font-size: 12px; }
+.doctor-workspace .doctor-agenda .agenda-visit p { margin: 3px 0 0; color: var(--doctor-muted); font-size: 10px; }
+.doctor-workspace .doctor-agenda .button { min-height: 35px; border-radius: 8px; font-size: 10px; }
+
+/* Shared clinician surfaces and controls. */
+.doctor-workspace .portal-content .card,
+.doctor-workspace .portal-content .account-card,
+.doctor-workspace .portal-content .patient-chart-section,
+.doctor-workspace .portal-content .integration-card,
+.doctor-workspace .portal-content .calendar-page > .card {
+  border: 1px solid var(--doctor-line);
+  border-radius: 13px;
+  background: var(--doctor-surface);
+  box-shadow: 0 3px 13px rgb(38 52 46 / 3%);
+}
+.doctor-workspace .portal-content .card > h2,
+.doctor-workspace .portal-content .patient-chart-section h2,
+.doctor-workspace .portal-content .consultation-form > h2 { color: #2d4236; font-size: 20px; letter-spacing: -.025em; }
+.doctor-workspace .portal-content .btn,
+.doctor-workspace .portal-content .button { min-height: 40px; border-radius: 8px; font-size: 11px; font-weight: 650; }
+.doctor-workspace .portal-content .btn-primary,
+.doctor-workspace .portal-content .button-primary { color: #fff; background: #3e7058; border-color: #3e7058; }
+.doctor-workspace .portal-content .btn-primary:hover:not(:disabled),
+.doctor-workspace .portal-content .button-primary:hover:not(:disabled) { color: #fff; background: #315b46; border-color: #315b46; }
+.doctor-workspace .portal-content .btn-secondary,
+.doctor-workspace .portal-content .button-secondary { color: #3c5947; background: #fffefa; border-color: #d8dfd5; }
+.doctor-workspace .portal-content .btn-secondary:hover:not(:disabled),
+.doctor-workspace .portal-content .button-secondary:hover:not(:disabled) { background: #f1f4ee; border-color: #afc0b1; }
+.doctor-workspace .portal-content .form-error,
+.doctor-workspace .portal-content .form-notice { border-radius: 9px; font-size: 12px; line-height: 1.5; }
+.doctor-workspace .portal-content :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { min-height: 43px; border: 1px solid #dbe1d8; border-radius: 8px; color: #293d32; background: #fff; font-size: 12px; }
+.doctor-workspace .portal-content textarea { min-height: 96px; }
+.doctor-workspace .portal-content :is(input, select, textarea):focus-visible { border-color: #628a6f; outline: 3px solid rgb(79 126 94 / 13%); outline-offset: 1px; }
+.doctor-workspace .portal-content label { color: #40564a; font-size: 11px; font-weight: 600; }
+.doctor-workspace .portal-content .back-link { min-height: 38px; display: inline-flex; align-items: center; color: #4d7259; font-size: 12px; text-underline-offset: 3px; }
+.doctor-workspace .status-pill { border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: .035em; }
+
+/* Appointments, schedule, and patient directory. */
+.doctor-workspace .appointment-tools { gap: 12px; padding: 13px 16px; border-color: #e8ebe4; background: #fffefa; }
+.doctor-workspace .appointment-filters { padding: 4px; border: 1px solid #e4e8df; border-radius: 9px; background: #f5f6f1; }
+.doctor-workspace .appointment-filters button { min-height: 36px; border-radius: 6px; color: #637268; font-size: 10px; }
+.doctor-workspace .appointment-filters button.active { color: #315740; background: #fffefa; box-shadow: 0 1px 4px rgb(38 52 46 / 10%); }
+.doctor-workspace .list-search { min-height: 42px; padding: 0 10px; border: 1px solid #e1e5dd; border-radius: 8px; background: #fff; }
+.doctor-workspace .appointment-list { gap: 9px; padding: 14px; }
+.doctor-workspace .appointment-card { grid-template-columns: 52px minmax(0, 1fr); gap: 13px; padding: 15px; border-color: #e2e6dd; border-radius: 11px; background: #fffefa; box-shadow: none; }
+.doctor-workspace .appointment-date { width: 47px; height: 51px; border-radius: 9px; color: #365f47; background: #edf2e9; }
+.doctor-workspace .appointment-card-title h3 { color: #2c4135; font-family: var(--font-sans); font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+.doctor-workspace .appointment-person { color: #69786e; font-size: 11px; }
+.doctor-workspace .appointment-person a { color: #3e7058; font-weight: 650; text-underline-offset: 3px; }
+.doctor-workspace .appointment-main > p { color: #69786e; font-size: 11px; }
+.doctor-workspace .appointment-card-actions { gap: 7px; margin-top: 10px; }
+.doctor-workspace .appointment-card-actions .button { min-height: 35px; padding-inline: 11px; }
+.doctor-workspace .data-table-wrap { overflow-x: auto; border-color: #e0e4db; border-radius: 12px; background: #fffefa; }
+.doctor-workspace .data-table { min-width: 680px; font-size: 11px; }
+.doctor-workspace .data-table th { padding: 12px 14px; color: #66776c; background: #f2f4ee; font-size: 9px; }
+.doctor-workspace .data-table td { padding: 13px 14px; border-color: #eaede6; font-size: 11px; }
+.doctor-workspace .data-table td a { color: #3d6e53; font-weight: 650; text-underline-offset: 3px; }
+.doctor-workspace .patient-search { margin: 12px; }
+.doctor-workspace .patient-chart { max-width: 1180px; }
+.doctor-workspace .patient-chart > h1 { margin: 0; color: var(--doctor-ink); font-family: var(--font-display); font-size: clamp(30px, 3vw, 38px); font-weight: 500; }
+.doctor-workspace .patient-chart-name { margin: 5px 0 0; color: #435b4b; font-size: 15px; font-weight: 650; }
+.doctor-workspace .patient-chart-section { margin-top: 14px; padding: 20px; }
+.doctor-workspace .patient-chart-section-head { margin-bottom: 14px; }
+.doctor-workspace .patient-chart-section-head .eyebrow { color: #718273; font-size: 9px; }
+.doctor-workspace .patient-chart-section-head h2 { margin: 3px 0 0; font-size: 20px; }
+.doctor-workspace .patient-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 22px; }
+.doctor-workspace .patient-facts > p { display: grid; grid-template-columns: minmax(110px, .42fr) minmax(0, 1fr); gap: 12px; margin: 0; padding: 11px 0; border-top: 1px solid #edf0e9; font-size: 11px; line-height: 1.55; }
+.doctor-workspace .patient-facts strong { color: #6d7a70; font-weight: 550; }
+.doctor-workspace .patient-facts span { color: #2c4034; overflow-wrap: anywhere; }
+
+.doctor-workspace .calendar-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin: 20px 0 12px; padding: 12px; border: 1px solid var(--doctor-line); border-radius: 11px; background: var(--doctor-surface); }
+.doctor-workspace .calendar-range-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.doctor-workspace .calendar-range-controls strong { min-width: 185px; color: #344a3b; font-size: 12px; text-align: center; }
+.doctor-workspace .calendar-view-switch { display: flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid #e2e7de; border-radius: 8px; background: #f4f5f0; }
+.doctor-workspace .calendar-view-switch button { min-height: 33px; padding: 0 13px; border-radius: 6px; color: #66756b; font-size: 10px; }
+.doctor-workspace .calendar-view-switch button.active { color: #315940; background: #fffefa; box-shadow: 0 1px 3px rgb(38 52 46 / 10%); }
+.doctor-workspace .calendar-legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 10px 2px 14px; color: #6e7b71; font-size: 10px; }
+.doctor-workspace .calendar-day { margin-top: 13px; overflow: hidden; border: 1px solid var(--doctor-line); border-radius: 12px; background: var(--doctor-surface); }
+.doctor-workspace .calendar-day-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 17px; border-bottom: 1px solid #e8ebe4; background: #f5f6f1; }
+.doctor-workspace .calendar-day-heading h2 { margin: 0; color: #30463a; font-size: 16px; }
+.doctor-workspace .calendar-day-heading span { color: #6c7a70; font-size: 10px; }
+.doctor-workspace .calendar-appointments { display: grid; }
+.doctor-workspace .calendar-appointment { grid-template-columns: 62px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 13px 16px; border-bottom: 1px solid #edf0e9; }
+.doctor-workspace .calendar-appointment:last-child { border-bottom: 0; }
+.doctor-workspace .calendar-appointment time { color: #53675a; font-size: 11px; font-variant-numeric: tabular-nums; }
+.doctor-workspace .calendar-appointment > div > strong { color: #30453a; font-size: 12px; }
+.doctor-workspace .calendar-appointment > div > p { margin: 3px 0; color: #6c7a70; font-size: 10px; }
+.doctor-workspace .calendar-appointment > a { min-height: 36px; display: inline-flex; align-items: center; color: #3c6b50; font-size: 11px; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Consultation, prescription, and practice setup. */
+.doctor-workspace .doctor-consultation { max-width: 1120px; }
+.doctor-workspace .doctor-consultation > h1 { margin: 0 0 16px; color: var(--doctor-ink); font-family: var(--font-display); font-size: clamp(30px, 3vw, 38px); font-weight: 500; }
+.doctor-workspace .doctor-consultation > .card { margin-top: 13px; padding: 20px; }
+.doctor-workspace .appointment-detail-grid { align-items: flex-start; }
+.doctor-workspace .appointment-detail-grid strong { color: #2d4437; font-size: 16px; }
+.doctor-workspace .appointment-detail-grid p { color: #69786e; font-size: 11px; }
+.doctor-workspace .intake-summary { gap: 9px 18px; margin-top: 16px; padding: 15px; border-color: #e4e8df; border-radius: 10px; background: #f7f8f4; }
+.doctor-workspace .intake-summary h2 { color: #31483a; font-size: 17px; }
+.doctor-workspace .intake-summary p { margin: 0; color: #4d5e52; font-size: 11px; line-height: 1.55; overflow-wrap: anywhere; }
+.doctor-workspace .intake-summary b { color: #293e32; }
+.doctor-workspace .doctor-consultation .consultation-form { margin-top: 13px; }
+.doctor-workspace .consultation-form > h2 { margin-bottom: 14px; font-size: 20px; }
+.doctor-workspace .consultation-form .form-group { gap: 14px; }
+.doctor-workspace .consultation-form .form-group > label { display: grid; gap: 6px; }
+.doctor-workspace .medicine-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; padding: 14px; border-color: #e3e7de; border-radius: 10px; background: #f8f9f5; }
+.doctor-workspace .medicine-row label { display: grid; gap: 6px; }
+.doctor-workspace .medicine-row .text-button { justify-self: start; color: #925646; text-decoration: underline; text-underline-offset: 3px; }
+.doctor-workspace .consultation-form .portal-actions { gap: 9px; }
+.doctor-workspace .availability-list { gap: 8px; margin-top: 16px; }
+.doctor-workspace .availability-row { grid-template-columns: minmax(130px, 1.1fr) repeat(4, minmax(110px, 1fr)) auto; gap: 10px; align-items: end; padding: 13px; border: 1px solid var(--doctor-line); border-radius: 10px; background: var(--doctor-surface); }
+.doctor-workspace .availability-row label { display: grid; gap: 6px; }
+.doctor-workspace .availability-row .text-button { min-height: 42px; color: #935744; }
+.doctor-workspace .service-card { align-items: center; gap: 14px; padding: 16px; border: 1px solid var(--doctor-line); border-radius: 11px; background: var(--doctor-surface); }
+.doctor-workspace .service-card strong { color: #30463a; font-size: 14px; }
+.doctor-workspace .service-card p { color: #627268; font-size: 11px; line-height: 1.5; }
+.doctor-workspace .service-card small { color: #79867c; font-size: 10px; }
+.doctor-workspace .service-form-card { margin-top: 15px; }
+.doctor-workspace .service-form-card h2 { margin-bottom: 14px; }
+.doctor-workspace .service-form-grid { gap: 12px; }
+.doctor-workspace .integration-title { gap: 12px; margin-bottom: 14px; }
+.doctor-workspace .integration-title > svg { width: 42px; height: 42px; padding: 10px; border-radius: 11px; color: #3e7058; background: #edf2e9; }
+.doctor-workspace .integration-title h2 { margin: 0 0 3px; color: #2c4336; font-size: 19px; }
+.doctor-workspace .integration-title p { color: #6d7b71; font-size: 11px; }
+.doctor-workspace .integration-setup { margin-top: 15px; padding: 15px; border: 1px solid #e3e8df; border-radius: 10px; background: #f6f8f3; }
+.doctor-workspace .integration-setup strong { color: #334b3c; font-size: 12px; }
+.doctor-workspace .integration-setup p { color: #627268; font-size: 11px; line-height: 1.55; }
+.doctor-workspace .integration-setup code { overflow-wrap: anywhere; font-size: 10px; }
+.doctor-workspace .notification-item,
+.doctor-workspace .payment-card { border: 1px solid var(--doctor-line); border-radius: 11px; background: var(--doctor-surface); box-shadow: none; }
+.doctor-workspace .notification-item { padding: 15px 17px; }
+.doctor-workspace .notification-item > div:first-child strong { color: #30463a; font-size: 12px; }
+.doctor-workspace .notification-item small { color: #748177; font-size: 10px; }
+.doctor-workspace .notification-actions { gap: 12px; }
+.doctor-workspace .notification-actions a,
+.doctor-workspace .notification-actions button { min-height: 38px; display: inline-flex; align-items: center; color: #3d6c51; font-size: 11px; font-weight: 650; }
+.doctor-workspace .payment-list { gap: 9px; }
+.doctor-workspace .payment-card { padding: 15px 17px; }
+.doctor-workspace .payment-card h2 { margin: 4px 0; color: #2d4437; font-family: var(--font-sans); font-size: 17px; font-weight: 650; }
+.doctor-workspace .payment-card p,
+.doctor-workspace .payment-card .payment-label { color: #6f7d73; font-size: 10px; }
+.doctor-workspace .profile-card,
+.doctor-workspace .portal-content > .account-card { max-width: 760px; }
+.doctor-workspace .portal-content.account-page > .account-card {
+  width: min(100%, 760px);
+  padding: clamp(20px, 3vw, 30px);
+}
+.doctor-workspace .account-feature-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  margin-bottom: 16px;
+  place-items: center;
+  border-radius: 11px;
+  color: #3e7058;
+  background: #edf2e9;
+}
+.doctor-workspace .account-card-heading { margin-bottom: 17px; }
+.doctor-workspace .account-card-heading > .eyebrow {
+  display: block;
+  margin: 0 0 5px;
+  color: #718273;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .12em;
+}
+.doctor-workspace .account-card-heading h2 {
+  margin: 0;
+  color: #2d4236;
+  font-family: var(--font-sans);
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -.02em;
+}
+.doctor-workspace .account-card-heading p {
+  margin: 5px 0 0;
+  color: var(--doctor-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.doctor-workspace .account-identity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid #e3e8df;
+  border-radius: 9px;
+  background: #f7f8f4;
+}
+.doctor-workspace .account-identity span { color: #6e7d72; font-size: 11px; }
+.doctor-workspace .account-identity strong { color: #2f4738; font-size: 12px; font-weight: 650; overflow-wrap: anywhere; text-align: right; }
+.doctor-workspace .account-card .auth-form { display: grid; gap: 14px; margin: 0; }
+.doctor-workspace .account-card .auth-form label { display: grid; gap: 7px; color: #40564a; font-size: 11px; font-weight: 600; }
+.doctor-workspace .account-card .auth-form small { color: #728075; font-size: 10px; font-weight: 400; line-height: 1.45; }
+.doctor-workspace .account-card .auth-submit { width: 100%; margin-top: 2px; }
+.doctor-workspace .account-card .auth-submit:disabled {
+  opacity: 1;
+  color: #fff;
+  border-color: #4b735d;
+  background: #4b735d;
+  cursor: not-allowed;
+}
+.doctor-workspace .account-resend { justify-self: start; min-height: 40px; color: #3e7058; font-size: 11px; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+.doctor-workspace .account-card .auth-notice { display: flex; align-items: flex-start; gap: 8px; }
+
+@media (max-width: 1100px) {
+  .doctor-workspace .doctor-quick-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .doctor-workspace .doctor-focus-grid { grid-template-columns: 1fr 1fr; }
+  .doctor-workspace .availability-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .doctor-workspace .portal-sidebar { width: min(320px, calc(100vw - 48px)); flex-basis: auto; }
+  .doctor-workspace .portal-content { padding: 27px 23px 42px; }
+  .doctor-workspace .portal-menu-button { min-width: 42px; min-height: 42px; display: inline-grid; place-items: center; border-radius: 9px; }
+  .doctor-workspace .doctor-agenda article { grid-template-columns: 48px 9px minmax(0, 1fr) auto; }
+  .doctor-workspace .doctor-agenda article > a { grid-column: 3 / -1; justify-self: start; }
+}
+@media (max-width: 640px) {
+  .doctor-workspace .portal-topbar { min-height: 56px; padding-inline: 13px; }
+  .doctor-workspace .portal-content { padding: 22px 15px 32px; }
+  .doctor-workspace .portal-content > .page-header { margin-bottom: 20px; }
+  .doctor-workspace .doctor-dashboard-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .doctor-workspace .doctor-dashboard-heading > .btn { width: 100%; }
+  .doctor-workspace .doctor-quick-stats { gap: 7px; }
+  .doctor-workspace .doctor-quick-stats article { min-height: 78px; padding: 10px; }
+  .doctor-workspace .doctor-quick-stats article span { font-size: 8px; }
+  .doctor-workspace .doctor-quick-stats article strong { font-size: 23px; }
+  .doctor-workspace .doctor-quick-stats article small { font-size: 9px; }
+  .doctor-workspace .doctor-focus-grid { grid-template-columns: 1fr; }
+  .doctor-workspace .doctor-focus-card,
+  .doctor-workspace .doctor-today-panel { padding: 16px; }
+  .doctor-workspace .doctor-request-list article { grid-template-columns: minmax(0, 1fr); }
+  .doctor-workspace .doctor-request-actions { grid-column: 1; grid-row: auto; }
+  .doctor-workspace .doctor-request-actions .button { width: 100%; }
+  .doctor-workspace .doctor-next-actions { display: grid; grid-template-columns: 1fr; }
+  .doctor-workspace .doctor-next-actions > * { width: 100%; }
+  .doctor-workspace .doctor-agenda article { grid-template-columns: 44px 8px minmax(0, 1fr); gap: 8px; }
+  .doctor-workspace .doctor-agenda article > .status-pill { grid-column: 3; justify-self: start; }
+  .doctor-workspace .doctor-agenda article > a { grid-column: 3; }
+  .doctor-workspace .appointment-tools { align-items: stretch; flex-direction: column; padding: 11px; }
+  .doctor-workspace .appointment-tools .list-search { width: 100%; }
+  .doctor-workspace .appointment-filters { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .doctor-workspace .appointment-filters button { padding-inline: 4px; }
+  .doctor-workspace .appointment-list { padding: 10px; }
+  .doctor-workspace .appointment-card { grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 12px; }
+  .doctor-workspace .appointment-card-title { align-items: flex-start; flex-wrap: wrap; }
+  .doctor-workspace .appointment-card-title h3 { font-size: 14px; }
+  .doctor-workspace .appointment-card-actions { grid-column: 1 / -1; }
+  .doctor-workspace .appointment-card-actions .button { flex: 1 1 auto; }
+  .doctor-workspace .patient-search { margin: 10px; }
+  .doctor-workspace .data-table { min-width: 620px; }
+  .doctor-workspace .patient-chart-section { padding: 15px; }
+  .doctor-workspace .patient-facts { grid-template-columns: 1fr; }
+  .doctor-workspace .patient-facts > p { grid-template-columns: minmax(100px, .45fr) minmax(0, 1fr); gap: 8px; }
+  .doctor-workspace .calendar-toolbar { align-items: stretch; flex-direction: column; }
+  .doctor-workspace .calendar-range-controls { display: grid; grid-template-columns: 42px minmax(0, 1fr) 42px; }
+  .doctor-workspace .calendar-range-controls strong { min-width: 0; font-size: 10px; }
+  .doctor-workspace .calendar-range-controls button:last-child { grid-column: 1 / -1; }
+  .doctor-workspace .calendar-view-switch { display: grid; grid-template-columns: 1fr 1fr; }
+  .doctor-workspace .calendar-legend { gap: 9px; font-size: 9px; }
+  .doctor-workspace .calendar-appointment { grid-template-columns: 47px minmax(0, 1fr); gap: 8px; padding: 12px; }
+  .doctor-workspace .calendar-appointment > a { grid-column: 2; justify-self: start; }
+  .doctor-workspace .doctor-consultation > .card { padding: 15px; }
+  .doctor-workspace .appointment-detail-grid { flex-direction: column; }
+  .doctor-workspace .appointment-detail-grid > .btn { width: 100%; }
+  .doctor-workspace .intake-summary { grid-template-columns: 1fr; padding: 12px; }
+  .doctor-workspace .intake-summary h2 { font-size: 16px; }
+  .doctor-workspace .medicine-row { grid-template-columns: 1fr; padding: 12px; }
+  .doctor-workspace .medicine-row label:first-child { grid-column: auto; }
+  .doctor-workspace .consultation-form .portal-actions { display: grid; grid-template-columns: 1fr; }
+  .doctor-workspace .availability-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .doctor-workspace .availability-row label:first-child { grid-column: 1 / -1; }
+  .doctor-workspace .availability-row .text-button { grid-column: 1 / -1; justify-self: start; }
+  .doctor-workspace .portal-content .service-card { align-items: flex-start; flex-direction: column; }
+  .doctor-workspace .portal-content .service-card > .btn { width: 100%; }
+  .doctor-workspace .service-form-grid { grid-template-columns: 1fr; }
+  .doctor-workspace .notification-item { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .doctor-workspace .notification-actions { flex-wrap: wrap; }
+  .doctor-workspace .payment-card { align-items: flex-start; flex-direction: column; }
+  .doctor-workspace .account-identity { align-items: flex-start; flex-direction: column; }
+  .doctor-workspace .account-identity strong { text-align: left; }
+}
+@media (max-width: 380px) {
+  .doctor-workspace .portal-content { padding-inline: 12px; }
+  .doctor-workspace .appointment-card-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .doctor-workspace .appointment-card-actions > :first-child { grid-column: 1 / -1; }
+  .doctor-workspace .availability-row { grid-template-columns: 1fr; }
+  .doctor-workspace .availability-row label:first-child,
+  .doctor-workspace .availability-row .text-button { grid-column: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .doctor-workspace *,
+  .doctor-workspace *::before,
+  .doctor-workspace *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

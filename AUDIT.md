@@ -7,7 +7,7 @@
 
 | Area | Components | Boundary / responsibility |
 |---|---|---|
-| Browser client | React 19, TypeScript, Vite, React Router, `client/src/auth`, `components`, `lib`, `pages` | Untrusted browser input; sends same-origin `/api` requests with an HttpOnly cookie. React escapes rendered text. The active pages are in `PortalPage.tsx` and other page modules; `index.css` imports `legacy.css` as the current style layer. |
+| Browser client | React 19, TypeScript, Vite, React Router, `client/src/auth`, `components`, `lib`, `pages` | Untrusted browser input; sends `/api` requests with an HttpOnly cookie. React escapes rendered text. `PortalPage.tsx` contains most patient/doctor screens. Tailwind v4 is configured, while `index.css` also contains a large class-based stylesheet with later override layers; no `legacy.css` file or import exists in the current source. |
 | API process | Express 5, `server/src/app.ts`, `http.ts`, `middleware/*` | CORS, request policy, body limits, security/cache headers, authentication, errors. The API does not serve the SPA in this workspace. |
 | Authentication | `routes/auth.ts`, `middleware/auth.ts`, `middleware/cookies.ts` | Public password/Google/phone sign-in, registration and recovery; DB-backed opaque sessions. Doctor accounts are provisioned with an operator command. |
 | Protected API | `routes/portal.ts`, `routes/booking.ts`, `routes/integrations.ts` | Portal routes require a session. Patient and doctor role checks and resource ownership filters are applied server-side. Public booking discovery is read-only; creating requests requires a patient session. |
@@ -40,6 +40,7 @@ Controls present in the reviewed code:
 - React renders user-supplied text as text; a source scan found no `dangerouslySetInnerHTML`, `innerHTML`, `localStorage`, or `sessionStorage` usage. Google Meet links rendered by the client are restricted to HTTPS `meet.google.com`.
 - Error responses are generic. Server diagnostics now log request ID, method, error type and a safe SQLSTATE where available rather than raw error messages. Provider failure logs avoid error-message/payload output.
 - Authentication has route-specific brute-force limits; appointment requests, report uploads, and prescription issuance now also have tighter per-user/per-IP limits. These are still held in process memory.
+- Client session bootstrap distinguishes an API `401/403` from a transport/server failure. Only the former clears the client user; the latter leaves the session state unresolved and offers a retry rather than redirecting protected-route visitors to sign-in.
 
 ## Threat model and findings
 
