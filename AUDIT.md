@@ -3,18 +3,20 @@
 **Review date:** 2026-10-05  
 **Scope:** static review of the current `client/`, `server/`, `database/`, manifests, lockfiles, tests, and documentation. `.env` files were excluded and not inspected. This is not a penetration test or a production-readiness certification.
 
+> **Status note (2026-10-20):** This is a historical security/architecture snapshot, not a fresh audit of the current diff. Since the review, the monolithic client `PortalPage.tsx` has been removed and its routes are now split across `client/src/patient/`, `client/src/doctor/`, and `client/src/portal/`. The repository was initialized after the original review, so the original remote/history statement below is historical.
+
 ## Architecture map and trust boundaries
 
 | Area | Components | Boundary / responsibility |
 |---|---|---|
-| Browser client | React 19, TypeScript, Vite, React Router, `client/src/auth`, `components`, `lib`, `pages` | Untrusted browser input; sends `/api` requests with an HttpOnly cookie. React escapes rendered text. `PortalPage.tsx` contains most patient/doctor screens. Tailwind v4 is configured, while `index.css` also contains a large class-based stylesheet with later override layers; no `legacy.css` file or import exists in the current source. |
+| Browser client | React 19, TypeScript, Vite, React Router, `client/src/auth`, `components`, `lib`, `pages`, `patient`, `doctor`, and `portal` | Untrusted browser input; sends `/api` requests with an HttpOnly cookie. React escapes rendered text. Patient and clinician routes are feature-split across their own modules with shared portal details/activity modules. Tailwind v4 is configured, while `index.css` also contains a large class-based stylesheet with later override layers; no `legacy.css` file or import exists in the current source. |
 | API process | Express 5, `server/src/app.ts`, `http.ts`, `middleware/*` | CORS, request policy, body limits, security/cache headers, authentication, errors. The API does not serve the SPA in this workspace. |
 | Authentication | `routes/auth.ts`, `middleware/auth.ts`, `middleware/cookies.ts` | Public password/Google/phone sign-in, registration and recovery; DB-backed opaque sessions. Doctor accounts are provisioned with an operator command. |
 | Protected API | `routes/portal.ts`, `routes/booking.ts`, `routes/integrations.ts` | Portal routes require a session. Patient and doctor role checks and resource ownership filters are applied server-side. Public booking discovery is read-only; creating requests requires a patient session. |
 | Persistence | PostgreSQL `pg` pool and ordered SQL in `database/migrations/` | Stores identities, sessions, appointments, consultations, reports, prescriptions, payment history, notifications, audit rows, and encrypted Calendar credentials. No ORM/repository layer is used; route modules currently contain both SQL and request/business-flow logic. |
 | External providers | Google OAuth/Calendar, Twilio Verify, Resend | Provider credentials are server-side. OAuth state/nonce/PKCE protects Google flows; Calendar tokens are AES-GCM encrypted in the application before persistence. Provider calls now use a bounded timeout. |
 | Operator/system operations | `scripts/migrate.ts`, `scripts/provision-doctor.ts` | Requires server/database access. Public registration only creates patient accounts; it cannot set a privileged role. |
-| Build/deployment | Per-package `package.json` and lockfiles; no deployment manifest | The Vite development proxy is configurable. Production hosting/reverse-proxy security headers, TLS, secrets management, backups, and monitoring are deployment responsibilities and are not represented by this repository. |
+| Build/deployment | Per-package `package.json` and lockfiles; `client/vercel.json` has an SPA rewrite only | The Vite development proxy is configurable. Production API proxying, security headers, TLS, secrets management, backups, and monitoring are deployment responsibilities not configured here. |
 
 ### Endpoint classes
 
@@ -62,7 +64,7 @@ Controls present in the reviewed code:
 | Leaked session or reset token | Tokens are random; database stores hashes; cookies are HttpOnly; reset invalidates all active sessions. | No MFA or user-visible session management; expired sessions are not proactively pruned. Add cleanup/monitoring and recovery controls as separate batch. | Source review; DB session lifecycle not exercised. |
 | Provider outage / stalled request | Outbound Google, Twilio, and Resend fetch calls use a 15-second abort timeout. | Retries/idempotency and provider-specific timeouts need real integration tests. Calendar event creation may leave an external event if the app fails after provider success; stable IDs make retry recovery possible. | Unit regression verifies outbound abort behavior; no live provider calls. |
 | Payment/webhook tampering | Payment list is read-only history; no order creation, payment verification, or webhook endpoint is implemented. | Do not accept real payments or mark an appointment paid. Implement official server-side signature checks, ownership validation, idempotency, and replay tests before enabling payments. | Route inventory confirmed no payment/webhook mutation route. |
-| Secret leakage | `.gitignore` excludes `.env`/`.env.*`; a high-confidence source scan outside those files found no provider-key/private-key patterns. | `.env` contents were intentionally not examined; no Git metadata is present, so commit history is unavailable. A prior chat screenshot showed part of an environment file: revoke any real credential that was fully exposed. | Source scan; `.git status` reports this folder is not a Git repository. |
+| Secret leakage | `.gitignore` excludes `.env`/`.env.*`; a high-confidence source scan outside those files found no provider-key/private-key patterns. | `.env` contents were intentionally not examined. At the time of the original audit no Git metadata was present, so history was unavailable. A prior chat screenshot showed part of an environment file: revoke any real credential that was fully exposed. | Historical source scan; current commit history still needs owner review before publication. |
 | Dependency vulnerabilities | Lockfiles exist; offline `npm audit` reported zero advisories in cached advisory data. | Live registry audit failed with network access denied. Rerun both audits in network-enabled CI before deployment. | Offline audit succeeded; online audit unavailable. |
 | Denial of service through provider/upload/booking load | 64 KB JSON limit, 8 MB report limit, global API limit, route-specific booking/upload/prescription limits, provider timeouts. | In-memory limits can be bypassed by restarts/multiple instances; add shared storage, upload quotas, and operational resource monitoring. | TypeScript/build + 7 server tests; no load test. |
 
@@ -93,9 +95,9 @@ Controls present in the reviewed code:
 - The API's headers do not set CSP on the SPA. No production static host/reverse-proxy config exists. Add and test frontend headers at the actual host.
 - Reports are stored as PostgreSQL `bytea`. Whether database disks/backups are encrypted at rest and retained/deleted correctly depends on deployment configuration and has not been verified.
 - No database-backed IDOR tests, booking-race tests, migration tests, file round-trip tests, live OAuth/Calendar tests, or provider/webhook security tests exist yet.
-- Route modules contain SQL/business flow and `PortalPage.tsx` is large. No mass refactor was made because it would risk existing workflows without broader DB-backed coverage. Split modules incrementally with behavior tests rather than in a single rewrite.
+- Route modules still contain SQL/business flow. The client route split has been completed since this audit snapshot; backend route/service separation remains a separate refactor and should use behavior tests.
 - The screenshot credential exposure should be assessed by the owner. Rotate exposed credentials; calendar encryption-key rotation requires token re-encryption or reconnecting the Calendar account.
-- The workspace is not a Git repository, so staged diffs, committed secret history, and remote configuration could not be inspected.
+- At the time of this audit, the workspace was not yet a Git repository, so staged diffs, committed secret history, and remote configuration were not inspected. This repository now has a `.git` directory, but this historical report did not inspect its remote or history.
 
 ## Next safe batches
 

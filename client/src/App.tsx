@@ -8,12 +8,27 @@ const AuthPage = lazy(() => import('./pages/AuthPage'));
 const PasswordRecoveryPage = lazy(() => import('./pages/PasswordRecoveryPage'));
 const AccountPage = lazy(() => import('./pages/AccountPage'));
 const LandingPage = lazy(() => import('./pages/LandingPage'));
-const PortalLayout = lazy(() => import('./pages/PortalPage').then((page) => ({ default: page.PortalLayout })));
-const PortalHome = lazy(() => import('./pages/PortalPage').then((page) => ({ default: page.PortalHome })));
-const PortalSection = lazy(() => import('./pages/PortalPage').then((page) => ({ default: page.PortalSection })));
-const AppointmentDetail = lazy(() => import('./pages/PortalPage').then((page) => ({ default: page.AppointmentDetail })));
-const PatientDetail = lazy(() => import('./pages/PortalPage').then((page) => ({ default: page.PatientDetail })));
+const PatientPortalLayout = lazy(() => import('./patient/PatientPortalLayout'));
+const DoctorPortalLayout = lazy(() => import('./doctor/DoctorPortalLayout'));
+const PatientOverviewPage = lazy(() => import('./patient/PatientOverviewPage'));
+const DoctorOverviewPage = lazy(() => import('./doctor/DoctorOverviewPage'));
+const AppointmentDetailPage = lazy(() => import('./portal/AppointmentDetailPage'));
 const BookingPage = lazy(() => import('./patient/BookingPage'));
+const DoctorCalendarPage = lazy(() => import('./doctor/DoctorCalendarPage'));
+const DoctorPatientsPage = lazy(() => import('./doctor/DoctorPatientsPage'));
+const DoctorAppointmentsPage = lazy(() => import('./doctor/DoctorAppointmentsPage'));
+const DoctorServicesPage = lazy(() => import('./doctor/DoctorServicesPage'));
+const DoctorAvailabilityPage = lazy(() => import('./doctor/DoctorAvailabilityPage'));
+const DoctorIntegrationsPage = lazy(() => import('./doctor/DoctorIntegrationsPage'));
+const DoctorPatientDetailPage = lazy(() => import('./doctor/DoctorPatientDetailPage'));
+const DoctorPrescriptionsPage = lazy(() => import('./doctor/DoctorPrescriptionsPage'));
+const ProfilePage = lazy(() => import('./portal/ProfilePage'));
+const CareHistoryPage = lazy(() => import('./portal/PortalActivityPages').then((page) => ({ default: page.CareHistoryPage })));
+const PatientReportsPage = lazy(() => import('./portal/PortalActivityPages').then((page) => ({ default: page.PatientReportsPage })));
+const NotificationsPage = lazy(() => import('./portal/PortalActivityPages').then((page) => ({ default: page.NotificationsPage })));
+const PaymentsPage = lazy(() => import('./portal/PortalActivityPages').then((page) => ({ default: page.PaymentsPage })));
+const PatientAppointmentsPage = lazy(() => import('./patient/PatientAppointmentsPage'));
+const PatientPrescriptionsPage = lazy(() => import('./patient/PatientPrescriptionsPage'));
 const StaticPage = lazy(() => import('./pages/StaticPage'));
 
 function RouteLoading() {
@@ -89,7 +104,6 @@ function NotFound() {
     </main>
   );
 }
-function LandingRoutes() { return <LandingPage />; }
 function App() {
   return (
     <AppErrorBoundary>
@@ -97,17 +111,19 @@ function App() {
         <Suspense fallback={<RouteLoading />}>
           <Routes>
             {/* Public pages are section anchors on the practice site. */}
-            <Route path="/" element={<LandingRoutes />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/about" element={<StaticPage type="about" />} />
             <Route path="/philosophy" element={<StaticPage type="philosophy" />} />
-            <Route path="/services" element={<LandingRoutes />} />
-            <Route path="/consultations" element={<LandingRoutes />} />
-            <Route path="/contact" element={<LandingRoutes />} />
-            <Route path="/faq" element={<LandingRoutes />} />
+            <Route path="/care" element={<LandingPage />} />
+            <Route path="/services" element={<LandingPage />} />
+            <Route path="/consultations" element={<LandingPage />} />
+            <Route path="/contact" element={<LandingPage />} />
+            <Route path="/faq" element={<LandingPage />} />
             
             {/* Legal Pages */}
             <Route path="/privacy" element={<StaticPage type="privacy" />} />
             <Route path="/terms" element={<StaticPage type="terms" />} />
+            <Route path="/booking-policy" element={<StaticPage type="policies" />} />
 
             {/* Authentication and account recovery. */}
             <Route path="/login" element={<AuthPage mode="login" />} />
@@ -117,38 +133,38 @@ function App() {
 
             <Route element={<AuthGate />}>
               <Route element={<RoleGate roles={['PATIENT']} />}>
-                <Route path="/patient" element={<PortalLayout role="PATIENT" />}>
-                  <Route index element={<PortalHome role="PATIENT" />} />
+                <Route path="/patient" element={<PatientPortalLayout />}>
+                  <Route index element={<PatientOverviewPage />} />
                   <Route path="account" element={<AccountPage />} />
-                  <Route path="profile" element={<PortalSection title="Your profile" role="PATIENT" />} />
-                  <Route path="appointments" element={<PortalSection title="Appointments" role="PATIENT" />} />
-                  <Route path="appointments/:id" element={<AppointmentDetail role="PATIENT" />} />
+                  <Route path="profile" element={<ProfilePage role="PATIENT" />} />
+                  <Route path="appointments" element={<PatientAppointmentsPage />} />
+                  <Route path="appointments/:id" element={<AppointmentDetailPage role="PATIENT" />} />
                   <Route path="book" element={<BookingPage />} />
-                  <Route path="history" element={<PortalSection title="Care history" role="PATIENT" />} />
-                  <Route path="reports" element={<PortalSection title="Reports" role="PATIENT" />} />
-                  <Route path="prescriptions" element={<PortalSection title="Prescriptions" role="PATIENT" />} />
-                  <Route path="payments" element={<PortalSection title="Payments" role="PATIENT" />} />
-                  <Route path="notifications" element={<PortalSection title="Notifications" role="PATIENT" />} />
+                  <Route path="history" element={<CareHistoryPage />} />
+                  <Route path="reports" element={<PatientReportsPage />} />
+                  <Route path="prescriptions" element={<PatientPrescriptionsPage />} />
+                  <Route path="payments" element={<PaymentsPage role="PATIENT" />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
                 </Route>
               </Route>
 
               <Route element={<RoleGate roles={['DOCTOR']} />}>
-                <Route path="/doctor" element={<PortalLayout role="DOCTOR" />}>
-                  <Route index element={<PortalHome role="DOCTOR" />} />
+                <Route path="/doctor" element={<DoctorPortalLayout />}>
+                  <Route index element={<DoctorOverviewPage />} />
                   <Route path="account" element={<AccountPage />} />
-                  <Route path="profile" element={<PortalSection title="Practice profile" role="DOCTOR" />} />
-                  <Route path="calendar" element={<PortalSection title="Calendar" role="DOCTOR" />} />
-                  <Route path="appointments" element={<PortalSection title="Appointments" role="DOCTOR" />} />
-                  <Route path="appointments/:id" element={<AppointmentDetail role="DOCTOR" />} />
-                  <Route path="patients" element={<PortalSection title="Patients" role="DOCTOR" />} />
-                  <Route path="patients/:id" element={<PatientDetail />} />
-                  <Route path="availability" element={<PortalSection title="Availability" role="DOCTOR" />} />
-                  <Route path="services" element={<PortalSection title="Consultation services" role="DOCTOR" />} />
-                  <Route path="integrations" element={<PortalSection title="Integrations" role="DOCTOR" />} />
+                  <Route path="profile" element={<ProfilePage role="DOCTOR" />} />
+                  <Route path="calendar" element={<DoctorCalendarPage />} />
+                  <Route path="appointments" element={<DoctorAppointmentsPage />} />
+                  <Route path="appointments/:id" element={<AppointmentDetailPage role="DOCTOR" />} />
+                  <Route path="patients" element={<DoctorPatientsPage />} />
+                  <Route path="patients/:id" element={<DoctorPatientDetailPage />} />
+                  <Route path="availability" element={<DoctorAvailabilityPage />} />
+                  <Route path="services" element={<DoctorServicesPage />} />
+                  <Route path="integrations" element={<DoctorIntegrationsPage />} />
                   <Route path="reports" element={<Navigate to="/doctor/patients" replace />} />
-                  <Route path="prescriptions" element={<PortalSection title="Prescriptions" role="DOCTOR" />} />
-                  <Route path="payments" element={<PortalSection title="Payments" role="DOCTOR" />} />
-                  <Route path="notifications" element={<PortalSection title="Notifications" role="DOCTOR" />} />
+                  <Route path="prescriptions" element={<DoctorPrescriptionsPage />} />
+                  <Route path="payments" element={<PaymentsPage role="DOCTOR" />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
                 </Route>
               </Route>
             </Route>

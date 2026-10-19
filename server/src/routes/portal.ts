@@ -25,12 +25,14 @@ router.get('/overview', asyncRoute(async (req, res) => {
   }
   if (req.user!.role === 'DOCTOR') {
     const [appointments, counts] = await Promise.all([
-      pool.query(`SELECT a.id,a.starts_at,a.ends_at,a.status,a.method,s.name AS service_name,p.full_name AS patient_name
+      pool.query(`SELECT a.id,a.patient_id,a.starts_at,a.ends_at,a.status,a.method,s.name AS service_name,p.full_name AS patient_name
         FROM appointments a JOIN services s ON s.id=a.service_id JOIN patients p ON p.id=a.patient_id
-        WHERE a.doctor_id=$1 AND a.starts_at>=now() AND a.status IN ('PENDING','PAYMENT_PENDING','CONFIRMED','UPCOMING','IN_PROGRESS') ORDER BY CASE WHEN a.status='PENDING' THEN 0 ELSE 1 END,a.starts_at LIMIT 8`, [req.user!.doctorId]),
+        WHERE a.doctor_id=$1 AND (a.status='PENDING' OR (a.starts_at>=now() AND a.status IN ('PAYMENT_PENDING','CONFIRMED','UPCOMING','IN_PROGRESS')))
+        ORDER BY CASE WHEN a.status='PENDING' THEN 0 ELSE 1 END,a.starts_at LIMIT 8`, [req.user!.doctorId]),
       pool.query(`SELECT (SELECT count(*) FROM appointments WHERE doctor_id=$1 AND starts_at::date=CURRENT_DATE AND status NOT IN ('CANCELLED','NO_SHOW')) AS today,
         (SELECT count(DISTINCT patient_id) FROM appointments WHERE doctor_id=$1) AS patients,
-        (SELECT count(*) FROM appointments WHERE doctor_id=$1 AND status='COMPLETED') AS completed`, [req.user!.doctorId]),
+        (SELECT count(*) FROM appointments WHERE doctor_id=$1 AND status='COMPLETED') AS completed,
+        (SELECT count(*) FROM appointments WHERE doctor_id=$1 AND status='PENDING') AS pending`, [req.user!.doctorId]),
     ]);
     return res.json({ appointments: appointments.rows, counts: counts.rows[0] });
   }
@@ -40,10 +42,28 @@ router.get('/overview', asyncRoute(async (req, res) => {
 router.get('/appointments', asyncRoute(async (req, res) => {
   if (!['PATIENT','DOCTOR'].includes(req.user!.role)) throw new HttpError(403, 'You do not have access to this resource.');
   const patient = req.user!.role === 'PATIENT';
+  const hasRange = req.query.from !== undefined || req.query.to !== undefined;
+  let rangeStart: Date | null = null;
+  let rangeEnd: Date | null = null;
+  if (hasRange) {
+    if (patient || typeof req.query.from !== 'string' || typeof req.query.to !== 'string') throw new HttpError(400, 'Provide a valid appointment date range.');
+    rangeStart = new Date(req.query.from);
+    rangeEnd = new Date(req.query.to);
+    const rangeMs = rangeEnd.getTime() - rangeStart.getTime();
+    if (!Number.isFinite(rangeStart.getTime()) || !Number.isFinite(rangeEnd.getTime()) || rangeMs <= 0 || rangeMs > 63 * 24 * 60 * 60 * 1000) throw new HttpError(400, 'Choose a schedule range of up to 63 days.');
+  }
+  if (!patient && rangeStart && rangeEnd) {
+    const result = await pool.query(`SELECT a.id,a.patient_id,a.starts_at,a.ends_at,a.status,a.method,a.meeting_url,a.problem_description,a.symptoms,
+        s.name AS service_name,s.duration_minutes,s.fee_paise,p.full_name AS other_person
+      FROM appointments a JOIN services s ON s.id=a.service_id JOIN patients p ON p.id=a.patient_id
+      WHERE a.doctor_id=$1 AND a.starts_at >= $2 AND a.starts_at < $3 ORDER BY a.starts_at ASC LIMIT 1000`,
+    [req.user!.doctorId, rangeStart.toISOString(), rangeEnd.toISOString()]);
+    return res.json({ appointments: result.rows });
+  }
   const result = await pool.query(`SELECT a.id,a.patient_id,a.starts_at,a.ends_at,a.status,a.method,a.meeting_url,a.problem_description,a.symptoms,
       s.name AS service_name,s.duration_minutes,s.fee_paise,${patient ? 'd.display_name' : 'p.full_name'} AS other_person
     FROM appointments a JOIN services s ON s.id=a.service_id JOIN ${patient ? 'doctors d ON d.id=a.doctor_id' : 'patients p ON p.id=a.patient_id'}
-    WHERE a.${patient ? 'patient_id' : 'doctor_id'}=$1 ORDER BY a.starts_at DESC LIMIT 100`, [patient ? req.user!.patientId : req.user!.doctorId]);
+    WHERE a.${patient ? 'patient_id' : 'doctor_id'}=$1 ORDER BY ${patient ? 'a.starts_at DESC' : "CASE WHEN a.status='PENDING' THEN 0 ELSE 1 END,a.starts_at DESC"} LIMIT 100`, [patient ? req.user!.patientId : req.user!.doctorId]);
   return res.json({ appointments: result.rows });
 }));
 
@@ -93,6 +113,7 @@ router.put('/appointments/:id/consultation', requireRole('DOCTOR'), asyncRoute(a
     await client.query('BEGIN');
     const appointment=await client.query(`SELECT id,patient_id,status FROM appointments WHERE id=$1 AND doctor_id=$2 FOR UPDATE`,[appointmentId,req.user!.doctorId]);
     if(!appointment.rowCount)throw new HttpError(404,'Appointment not found.');
+    if(appointment.rows[0].status==='COMPLETED')throw new HttpError(409,'This consultation is complete and can no longer be edited.');
     if(!['CONFIRMED','UPCOMING','IN_PROGRESS','COMPLETED'].includes(appointment.rows[0].status))throw new HttpError(409,'Accept the appointment request before documenting a consultation.');
     const saved=await client.query(`INSERT INTO consultations(appointment_id,patient_id,doctor_id,notes,assessment,diagnosis_code,follow_up_at,patient_summary,started_at,completed_at)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,now(),CASE WHEN $9 THEN now() ELSE NULL END)
@@ -150,9 +171,12 @@ router.post('/appointments/:id/cancel-request', requireRole('PATIENT'), asyncRou
 }));
 
 router.get('/notifications',asyncRoute(async(req,res)=>{
-  const result=await pool.query(`SELECT n.id,n.appointment_id,n.template_key,n.status,n.read_at,n.created_at
-    FROM notifications n WHERE n.user_id=$1 ORDER BY n.created_at DESC LIMIT 100`,[req.user!.id]);
-  return res.json({notifications:result.rows});
+  const [result,unread]=await Promise.all([
+    pool.query(`SELECT n.id,n.appointment_id,n.template_key,n.status,n.read_at,n.created_at
+      FROM notifications n WHERE n.user_id=$1 ORDER BY n.created_at DESC LIMIT 100`,[req.user!.id]),
+    pool.query(`SELECT COUNT(*)::int AS count FROM notifications WHERE user_id=$1 AND read_at IS NULL`,[req.user!.id]),
+  ]);
+  return res.json({notifications:result.rows,unreadCount:Number(unread.rows[0]?.count??0)});
 }));
 router.patch('/notifications/:id/read',asyncRoute(async(req,res)=>{
   const id=requiredUuid(req.params.id,'notification id');
@@ -235,6 +259,40 @@ router.get('/patients', requireRole('DOCTOR'), asyncRoute(async (req, res) => {
     FROM appointments a JOIN patients p ON p.id=a.patient_id JOIN users u ON u.id=p.user_id
     WHERE a.doctor_id=$1 GROUP BY p.id,u.email,u.phone ORDER BY max(a.starts_at) DESC LIMIT 200`, [req.user!.doctorId]);
   return res.json({ patients: result.rows });
+}));
+
+router.get('/patient-directory', requireRole('DOCTOR'), asyncRoute(async (req, res) => {
+  const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+  const pageText = typeof req.query.page === 'string' ? req.query.page : '1';
+  const page = Number(pageText);
+  const sortKey = typeof req.query.sort === 'string' ? req.query.sort : 'last_appointment';
+  const sortDirection = typeof req.query.order === 'string' ? req.query.order.toLowerCase() : 'desc';
+  const sortColumns: Record<string, string> = {
+    full_name: 'p.full_name',
+    email: 'u.email',
+    phone: 'u.phone',
+    appointment_count: 'count(a.id)',
+    last_appointment: 'max(a.starts_at)',
+  };
+  if (search.length > 120 || !/^\d+$/.test(pageText) || !Number.isSafeInteger(page) || page < 1 || page > 10000
+    || !Object.hasOwn(sortColumns, sortKey) || !['asc', 'desc'].includes(sortDirection)) {
+    throw new HttpError(400, 'Check the patient search, page, and sorting options.');
+  }
+  const pattern = `%${search}%`;
+  const direction = sortDirection === 'asc' ? 'ASC' : 'DESC';
+  const [patients, count] = await Promise.all([
+    pool.query(`SELECT p.id,p.full_name,u.email,u.phone,max(a.starts_at) AS last_appointment,count(a.id)::int AS appointment_count
+      FROM appointments a JOIN patients p ON p.id=a.patient_id JOIN users u ON u.id=p.user_id
+      WHERE a.doctor_id=$1 AND ($2='' OR p.full_name ILIKE $3 OR COALESCE(u.email,'') ILIKE $3 OR COALESCE(u.phone,'') ILIKE $3)
+      GROUP BY p.id,u.email,u.phone ORDER BY ${sortColumns[sortKey]} ${direction} NULLS LAST,p.full_name ASC LIMIT 25 OFFSET $4`,
+    [req.user!.doctorId, search, pattern, (page - 1) * 25]),
+    pool.query(`SELECT count(*)::int AS total FROM (
+      SELECT p.id FROM appointments a JOIN patients p ON p.id=a.patient_id JOIN users u ON u.id=p.user_id
+      WHERE a.doctor_id=$1 AND ($2='' OR p.full_name ILIKE $3 OR COALESCE(u.email,'') ILIKE $3 OR COALESCE(u.phone,'') ILIKE $3)
+      GROUP BY p.id
+    ) scoped_patients`, [req.user!.doctorId, search, pattern]),
+  ]);
+  return res.json({ patients: patients.rows, total: count.rows[0]?.total ?? 0, page, pageSize: 25 });
 }));
 
 router.get('/availability', requireRole('DOCTOR'), asyncRoute(async (req, res) => {

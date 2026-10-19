@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { CalendarDays, CheckCircle2 } from "lucide-react";
 import { api, ApiError } from "../lib/api";
+import { Select } from "../components/ui/select";
+import { PageHeader } from "../portal/PortalPrimitives";
 
 type Service = {
   id: string;
@@ -323,13 +325,13 @@ export default function BookingPage() {
   const steps = ["Consultation", "Date & time", "Your concern", "Review"];
   return (
     <main className="portal-content booking-page">
-      <div className="eyebrow">PATIENT BOOKING</div>
-      <h1>{submitted ? "Request received" : "Book a consultation"}</h1>
-      <p className="page-subtitle">
-        {submitted
+      <PageHeader
+        eyebrow="PATIENT BOOKING"
+        title={submitted ? "Request received" : "Book a consultation"}
+        description={submitted
           ? "Your request is in the practice’s queue. We’ll show updates in Appointments."
           : "Choose a visit and time that work for you. Your details stay with your private care record."}
-      </p>
+      />
       {loading ? (
         <div className="empty-state" role="status">
           Loading available consultations…
@@ -621,7 +623,7 @@ export default function BookingPage() {
                 <label>
                   How severe does it feel?{" "}
                   <span className="optional-label">Optional</span>
-                  <select
+                  <Select
                     value={severity}
                     onChange={(e) => setSeverity(e.target.value)}
                   >
@@ -631,7 +633,7 @@ export default function BookingPage() {
                         {i + 1} / 10
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
                 <fieldset className="booking-attachment">
                   <legend>
@@ -644,7 +646,7 @@ export default function BookingPage() {
                   </p>
                   <label>
                     Document type
-                    <select
+                    <Select
                       value={attachmentCategory}
                       onChange={(e) => setAttachmentCategory(e.target.value)}
                     >
@@ -652,7 +654,7 @@ export default function BookingPage() {
                       <option>Lab report</option>
                       <option>Imaging</option>
                       <option>Other</option>
-                    </select>
+                    </Select>
                   </label>
                   <label className="file-picker-label">
                     Choose a file

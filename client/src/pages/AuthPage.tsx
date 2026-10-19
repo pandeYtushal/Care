@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, HeartPulse, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { api, apiBaseUrl, ApiError } from '../lib/api';
 import EssentialCookieNotice from '../components/EssentialCookieNotice';
+import BrandMark from '../components/BrandMark';
 
 type Props = { mode: 'login' | 'register' };
 type LoginUser = { id?: string; role: 'PATIENT' | 'DOCTOR' | 'ADMIN' };
@@ -77,10 +78,10 @@ export default function AuthPage({ mode }: Props) {
   }
 
   return (
-    <main className="auth-page">
+    <main className="auth-page auth-entry-page">
       <aside className={`auth-story${clinicianLogin ? ' auth-story-clinician' : ''}`}>
         <Link to="/" className="auth-brand">
-          <span className="auth-brand-mark"><HeartPulse size={20} aria-hidden="true" /></span>
+          <span className="auth-brand-mark"><BrandMark /></span>
           <span>Dr. Kiran</span>
         </Link>
         <div className="auth-story-copy">

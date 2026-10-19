@@ -68,6 +68,16 @@
 
   --font-sans: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-display: 'Newsreader', Georgia, serif;
+  --font-ui: var(--font-sans);
+  --font-page-title: var(--font-display);
+  --font-section-title: var(--font-sans);
+  --type-body: 15px;
+  --type-label: 13px;
+  --type-card-title: 18px;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
 }
 
 @layer base {
@@ -176,6 +186,35 @@
     box-shadow: var(--shadow-xs);
   }
 
+  .page-header {
+    display: flex;
+    min-width: 0;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .page-header > :first-child {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .page-header-actions {
+    display: flex;
+    min-width: 0;
+    max-width: 100%;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .page-header-actions > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .btn,
   .button,
   .auth-submit {
@@ -219,6 +258,19 @@
 
     .portal-sidebar.portal-sidebar-open {
       transform: translateX(0);
+    }
+
+    .page-header {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .page-header-actions {
+      width: 100%;
+    }
+
+    .page-header-actions > :is(.btn, .button) {
+      flex: 1 1 180px;
     }
   }
 
@@ -2386,13 +2438,17 @@
   .auth-page {
     width: 100%;
     min-width: 0;
+    min-height: 100svh;
+    align-content: start;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
   }
 
   .auth-story {
     width: 100%;
     min-width: 0;
     min-height: auto;
+    align-self: start;
     padding: 22px 24px;
     gap: 26px;
   }
@@ -2423,6 +2479,7 @@
     width: 100%;
     min-width: 0;
     min-height: 0;
+    align-self: start;
     padding: 28px 24px 48px;
   }
 
@@ -2430,6 +2487,7 @@
     width: 100%;
     min-width: 0;
     max-width: 100%;
+    margin-block: 0;
   }
 
   .auth-card,
@@ -2756,6 +2814,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; letter-spacing:
 .sidebar-header h2, .doctor-workspace .sidebar-header h2 { color: var(--color-ink); font-family: var(--font-sans); font-size: 15px; font-weight: 650; }
 .sidebar-header p, .doctor-workspace .sidebar-header p { color: var(--color-ink-muted); }
 .portal-brand-mark, .doctor-workspace .portal-brand-mark { color: var(--color-brand); border-color: #dce4d9; background: var(--color-brand-subtle); backdrop-filter: none; }
+.brand-mark-image { display: block; width: 84%; height: 84%; object-fit: contain; }
 .portal-close-button, .doctor-workspace .portal-close-button { color: var(--color-ink-muted); background: #e9e7df; }
 .portal-close-button:hover, .doctor-workspace .portal-close-button:hover { color: var(--color-ink); background: var(--color-border); }
 .nav-section-title, .doctor-workspace .nav-section-title { color: #858b81; }
@@ -2803,6 +2862,27 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; letter-spacing:
 .portal-topbar__identity { display: flex; align-items: center; gap: 12px; color: #48574e; font-size: 12px; font-weight: 600; }
 .portal-menu-button { display: none; color: var(--color-brand); background: var(--color-surface); }
 .portal-notifications { color: var(--color-ink-muted); background: var(--color-surface); }
+.portal-notifications { position: relative; }
+.portal-notification-count,
+.nav-unread-count {
+  display: inline-flex;
+  min-width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--color-surface);
+  border-radius: 999px;
+  color: #fff;
+  background: #96513f;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.portal-notification-count { position: absolute; top: -3px; right: -3px; }
+.nav-item .nav-unread-count { flex: 0 0 auto; margin-left: auto; }
 .portal-scroll-area { min-width: 0; flex: 1; overflow: auto; }
 .portal-content { margin-inline: auto; }
 .portal-content .card { padding: 24px; }
@@ -3137,7 +3217,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; letter-spacing:
 
 .portal-content :is(input, select, textarea):focus-visible {
   border-color: #6c9479;
-  box-shadow: 0 0 0 3px rgb(71 119 95 / 13%);
+  box-shadow: none;
 }
 
 .portal-content .data-table-wrap {
@@ -3243,6 +3323,8 @@ body { background-color: var(--color-canvas); color: var(--color-ink); }
 .status-pill.status-refunded { color: var(--color-info); background: var(--color-info-subtle); }
 .empty-state { color: var(--color-ink-muted); }
 .form-error, .auth-alert { border-color: var(--color-error-border); background: var(--color-error-bg); color: var(--color-error-text); }
+.field-error { color: var(--color-danger); display: block; font-size: .78rem; line-height: 1.4; margin-top: .3rem; }
+.portal-content :is(input, select, textarea)[aria-invalid="true"] { border-color: var(--color-danger); }
 .auth-notice { border-color: var(--color-success-border); background: var(--color-success-bg); color: var(--color-success-text); }
 .auth-fields label, .form-group label, .form-label { color: var(--color-ink); font-size: var(--text-label); font-weight: var(--font-weight-semibold); line-height: 1.4; }
 .data-table-wrap { border-color: var(--color-border); border-radius: var(--radius-control); background: var(--color-surface); }
@@ -3252,11 +3334,88 @@ body { background-color: var(--color-canvas); color: var(--color-ink); }
 .empty-state { border-color: var(--color-border-strong); border-radius: var(--radius-card); background: var(--color-surface); }
 .nav-section-title, .portal-brand small, .user-info span, .static-page__number { color: var(--color-ink-muted); }
 
+/* Portal lists keep their own alignment; notification dates should never look
+   like filled bars, and unread state is shown with a small status marker. */
+.portal-content .card-list { min-width: 0; padding: 0; }
+.portal-content .card-list article small { width: fit-content; background: transparent; }
+.portal-content .notification-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; min-width: 0; padding: 16px 18px; border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-surface); }
+.portal-content .notification-item:not(.read) { border-left-width: 1px; background: #f7f9f4; }
+.portal-content .notification-copy { display: grid; min-width: 0; gap: 7px; }
+.portal-content .notification-title-row { display: flex; min-width: 0; align-items: flex-start; gap: 9px; }
+.portal-content .notification-title-row strong { min-width: 0; overflow-wrap: anywhere; }
+.portal-content .notification-unread-indicator { width: 8px; height: 8px; flex: 0 0 auto; margin-top: 5px; border-radius: 50%; background: var(--color-brand); }
+.portal-content .notification-date { display: block; margin: 0; padding: 0; color: var(--color-ink-muted); background: transparent; font-size: 11px; line-height: 1.4; }
+.portal-content .notification-actions { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 8px; }
+.portal-content .card-list .notification-actions a,
+.portal-content .card-list .notification-actions button { box-sizing: border-box; display: inline-flex; width: auto; height: 40px; min-height: 40px; align-items: center; justify-content: center; margin: 0; padding: 0 12px; border: 1px solid var(--color-border); border-radius: var(--radius-control); color: var(--color-brand-active); background: var(--color-surface); font-family: inherit; font-size: 11px; font-weight: 650; line-height: 1; text-decoration: none; vertical-align: middle; }
+.portal-content .card-list .notification-actions a:hover,
+.portal-content .card-list .notification-actions button:hover:not(:disabled) { border-color: var(--color-border-strong); background: var(--color-surface-sub); }
+.portal-content .notification-actions button:disabled { cursor: wait; opacity: .6; }
+
+@media (max-width: 640px) {
+  .portal-content .notification-item { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 15px; }
+  .portal-content .notification-actions { justify-content: flex-start; }
+  .portal-content .card-list .notification-actions a,
+  .portal-content .card-list .notification-actions button { height: 42px; min-height: 42px; }
+}
+
 @media (max-width: 900px) {
   .portal-sidebar { width: min(300px, calc(100vw - 56px)); flex-basis: auto; }
 }
 @media (min-width: 901px) {
   .portal-sidebar { visibility: visible; }
+}
+
+/* Shared typography contract: Newsreader is reserved for page-level editorial
+   titles. Functional UI (cards, forms, tables, navigation and actions) uses
+   Figtree at weights actually loaded by the app. */
+body,
+button,
+input,
+select,
+textarea { font-family: var(--font-ui); }
+
+.portal-content > .page-header h1,
+.portal-content > h1,
+.portal-content > .greeting,
+.static-page__hero h1,
+.auth-story-copy h1,
+.auth-panel-inner > h2,
+.route-state-error h1 { font-family: var(--font-page-title); }
+
+.portal-content .card > h2,
+.portal-content .account-card > h2,
+.portal-content .patient-chart-section h2,
+.portal-content .integration-title h2,
+.portal-content .consultation-form > h2,
+.portal-content .report-section-heading h2,
+.portal-content .patient-upcoming-heading h2,
+.portal-content .patient-chart-section-head h2 {
+  font-family: var(--font-section-title);
+  font-size: var(--type-card-title);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -.02em;
+  line-height: 1.35;
+}
+
+.portal-content :is(p, li, dd, dt),
+.auth-fields :is(p, label),
+.static-page__section p { font-family: var(--font-ui); }
+.portal-content :is(input, select, textarea),
+.auth-fields :is(input, select, textarea) { font-family: var(--font-ui); font-size: 14px; }
+.portal-content :is(button, .btn, .button, a.button),
+.auth-fields :is(button, .btn, .button) { font-family: var(--font-ui); font-weight: var(--weight-semibold); }
+.portal-content :is(time, .status-pill, .data-table, .data-table-wrap) { font-variant-numeric: tabular-nums; }
+
+@media (max-width: 640px) {
+  .portal-content .card > h2,
+  .portal-content .account-card > h2,
+  .portal-content .patient-chart-section h2,
+  .portal-content .integration-title h2,
+  .portal-content .consultation-form > h2,
+  .portal-content .report-section-heading h2,
+  .portal-content .patient-upcoming-heading h2,
+  .portal-content .patient-chart-section-head h2 { font-size: 17px; }
 }
 
 @media (max-width: 420px) {
@@ -3272,5 +3431,119 @@ body { background-color: var(--color-canvas); color: var(--color-ink); }
   .portal-content .portal-actions>*,
   .portal-content .booking-wizard-actions>* {
     width: 100%;
+  }
+}
+
+/* Notification center: distinguish unread updates, keep actions attached to
+   their message, and make the same list comfortable on touch screens. */
+.portal-content.notifications-page .card-list { display: grid; gap: 10px; padding: 0; }
+.portal-content.notifications-page .notification-item {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 16px;
+  border: 1px solid #e1e6dd;
+  border-radius: 13px;
+  background: #fffefa;
+  box-shadow: 0 2px 8px rgb(39 56 44 / 3%);
+}
+.portal-content.notifications-page .notification-item.unread { border-left: 3px solid #52785d; background: #f7f9f4; }
+.portal-content.notifications-page .notification-item.read { background: #fffefa; }
+.portal-content.notifications-page .notification-icon { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #e0e8dd; border-radius: 12px; color: #4e7658; background: #eff4ed; }
+.portal-content.notifications-page .notification-copy { display: grid; min-width: 0; gap: 5px; }
+.portal-content.notifications-page .notification-title-row { display: flex; min-width: 0; align-items: center; flex-wrap: wrap; gap: 7px 9px; }
+.portal-content.notifications-page .notification-title-row strong { color: #2e4438; font-size: 13px; font-weight: 650; line-height: 1.45; overflow-wrap: anywhere; }
+.portal-content.notifications-page .notification-new-label { display: inline-flex; min-height: 21px; align-items: center; padding: 3px 8px; border-radius: 999px; color: #3f684b; background: #e8f0e6; font-size: 9px; font-weight: 700; letter-spacing: .025em; line-height: 1; }
+.portal-content.notifications-page .notification-date { color: #78847a; font-size: 11px; line-height: 1.4; font-variant-numeric: tabular-nums; }
+.portal-content.notifications-page .notification-actions { display: flex; min-width: 0; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 7px; }
+.portal-content.notifications-page .notification-actions a,
+.portal-content.notifications-page .notification-actions button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; border: 1px solid #dce4da; border-radius: 9px; color: #3e6a4e; background: #fffefa; font-size: 11px; font-weight: 650; line-height: 1.25; text-decoration: none; white-space: nowrap; }
+.portal-content.notifications-page .notification-actions a:hover,
+.portal-content.notifications-page .notification-actions button:hover:not(:disabled) { border-color: #b9cabb; background: #f0f5ee; }
+.portal-content.notifications-page .notification-actions button { color: #627268; background: transparent; }
+.portal-content.notifications-page .notification-actions button:disabled { cursor: wait; opacity: .6; }
+.portal-content.notifications-page .notification-actions :is(a, button):focus-visible { outline: 3px solid rgb(79 126 94 / 19%); outline-offset: 2px; }
+@media (max-width: 640px) {
+  .portal-content.notifications-page { padding-top: 20px; }
+  .portal-content.notifications-page > .page-header { margin-bottom: 20px; }
+  .portal-content.notifications-page > .page-header h1 { font-size: clamp(28px, 8vw, 34px); line-height: 1.08; }
+  .portal-content.notifications-page > .page-header p { max-width: 34ch; font-size: 14px; line-height: 1.55; }
+  .portal-content.notifications-page .card-list { gap: 11px; }
+  .portal-content.notifications-page .notification-item {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px 11px;
+    padding: 14px;
+    border-radius: 15px;
+    box-shadow: 0 3px 12px rgb(39 56 44 / 4%);
+  }
+  .portal-content.notifications-page .notification-item.unread { border-left-width: 2px; }
+  .portal-content.notifications-page .notification-icon { width: 40px; height: 40px; border-radius: 12px; }
+  .portal-content.notifications-page .notification-copy { align-self: center; gap: 6px; }
+  .portal-content.notifications-page .notification-title-row { align-items: flex-start; gap: 6px; }
+  .portal-content.notifications-page .notification-title-row strong { font-size: 13px; line-height: 1.4; }
+  .portal-content.notifications-page .notification-date { font-size: 11px; }
+  .portal-content.notifications-page .notification-actions {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+    gap: 8px;
+    padding-top: 1px;
+  }
+  .portal-content.notifications-page .notification-actions a,
+  .portal-content.notifications-page .notification-actions button {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 10px;
+    border-radius: 11px;
+    font-size: 12px;
+    white-space: normal;
+  }
+}
+@media (max-width: 360px) {
+  .portal-content.notifications-page .notification-actions { align-items: stretch; flex-direction: column; }
+  .portal-content.notifications-page .notification-actions :is(a, button) { flex: none; width: 100%; }
+}
+
+/* On phones, keep login and registration focused on the form. */
+@media (max-width: 640px) {
+  .auth-entry-page { grid-template-rows: minmax(0, 1fr); }
+  .auth-entry-page .auth-story { display: none; }
+  .auth-entry-page .auth-panel { min-height: 100svh; padding: 24px 20px max(28px, env(safe-area-inset-bottom)); }
+  .auth-entry-page .auth-panel-inner { width: min(100%, 440px); margin-inline: auto; }
+}
+
+.portal-topbar-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 9px; }
+.portal-signout-button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 8px; padding: 0 13px; border: 1px solid var(--color-border); border-radius: 999px; color: #6f594d; background: var(--color-surface); font-family: var(--font-ui); font-size: 11px; font-weight: 650; line-height: 1; cursor: pointer; transition: border-color .15s ease, color .15s ease, background .15s ease; }
+.portal-signout-button:hover:not(:disabled) { border-color: #dfcfc4; color: #704b3d; background: #fbf5f0; }
+.portal-signout-button:focus-visible { outline: 3px solid rgb(143 174 146 / 50%); outline-offset: 2px; }
+.portal-signout-button:disabled { cursor: wait; opacity: .65; }
+.portal-topbar-feedback { position: absolute; top: calc(100% + 6px); right: 16px; z-index: 30; max-width: min(360px, calc(100vw - 32px)); margin: 0; padding: 10px 13px; border: 1px solid #edd6d0; border-radius: 10px; color: #8b4437; background: #fff9f6; box-shadow: 0 5px 18px rgb(51 42 34 / 10%); font-size: 11px; line-height: 1.45; }
+@media (max-width: 640px) {
+  .portal-topbar-actions { gap: 7px; }
+  .portal-signout-button { width: 44px; min-height: 44px; padding: 0; border-radius: 50%; }
+  .portal-signout-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; }
+  .portal-topbar-feedback { right: 12px; }
+}
+/* Shared public footer artwork: the pale wash preserves contrast over foliage. */
+.public-site-footer {
+  background-color: #f7f6ef;
+  background-image:
+    linear-gradient(90deg, rgb(250 249 243 / 91%) 0%, rgb(250 249 243 / 82%) 50%, rgb(250 249 243 / 91%) 100%),
+    url('/images/footer-botanical-background.png');
+  background-position: center;
+  background-size: cover;
+}
+
+@media (max-width: 699px) {
+  .public-site-footer {
+    background-image:
+      linear-gradient(180deg, #f7f6ef 0%, #f7f6ef 74%, rgb(247 246 239 / 88%) 84%, rgb(247 246 239 / 45%) 100%),
+      url('/images/footer-botanical-background.png');
+    background-position: center, center bottom;
+    background-size: cover, 100% auto;
+    background-repeat: no-repeat;
+    padding-bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px));
   }
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, HeartPulse } from 'lucide-react';
 import { api, ApiError } from '../lib/api';
 import EssentialCookieNotice from '../components/EssentialCookieNotice';
+import BrandMark from '../components/BrandMark';
 
 export default function PasswordRecoveryPage({ mode }: { mode: 'request' | 'reset' }) {
   const [params] = useSearchParams();
@@ -33,7 +34,7 @@ export default function PasswordRecoveryPage({ mode }: { mode: 'request' | 'rese
 
   return <main className="auth-page">
     <aside className="auth-story">
-      <Link to="/" className="auth-brand"><span className="auth-brand-mark"><HeartPulse size={21}/></span><span>Dr. Kiran</span></Link>
+      <Link to="/" className="auth-brand"><span className="auth-brand-mark"><BrandMark /></span><span>Dr. Kiran</span></Link>
       <div className="auth-story-copy"><div className="auth-eyebrow">PRIVATE PATIENT CARE</div><h1>A little help getting back to your care.</h1><p>Your account stays private and protected.</p></div>
       <p className="auth-story-footer">© {new Date().getFullYear()} Dr. Kiran · Private practice</p>
     </aside>

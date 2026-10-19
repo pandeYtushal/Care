@@ -4,3 +4,10 @@ dist/
 .env.*
 !.env.example
 coverage/
+codex-clipboard-*
+
+# Keep only the essential project docs in GitHub; retain local planning notes.
+/*.md
+**/*.md
+!/README.md
+!/SECURITY.md

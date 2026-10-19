@@ -1,10 +1,11 @@
-import { Activity, ArrowRight, ShieldCheck, Scale, Lightbulb, Info } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Scale, Lightbulb, Info } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import Footer from '../components/Footer';
+import BrandMark from '../components/BrandMark';
 
 type LegalPageProps = {
-  type: 'privacy' | 'terms' | 'philosophy' | 'about';
+  type: 'privacy' | 'terms' | 'philosophy' | 'about' | 'policies';
 };
 
 export default function LegalPage({ type }: LegalPageProps) {
@@ -91,26 +92,52 @@ export default function LegalPage({ type }: LegalPageProps) {
     },
     about: {
       title: 'About Dr. Kiran',
-      date: 'Redefining Private Practice',
+      date: 'A private practice for thoughtful consultations',
       sections: [
         {
-          title: 'Our Mission',
-          body: 'To provide accessible, high-quality private healthcare that respects the patient\'s time and dignity. We are moving away from the traditional high-volume clinic model to focus on personalized, telemedicine-first consultations.'
+          title: 'A conversation shaped around you',
+          body: 'A consultation is a chance to explain what has been happening, share relevant questions or reports, and discuss possible next steps with Dr. Kiran.'
         },
         {
-          title: 'The Practice',
-          body: 'Dr. Kiran\'s practice was established to bridge the gap between digital convenience and authentic medical care. By operating primarily through a secure telemedicine platform, we are able to serve patients across India without the overhead and wait times of a physical waiting room.'
+          title: 'Appointments and your records',
+          body: 'The patient portal lets you request an available consultation, follow appointment updates, and keep shared reports and visit information together.'
+        }
+      ]
+    },
+    policies: {
+      title: 'Booking & practice policies',
+      date: 'Please review before requesting a consultation',
+      sections: [
+        {
+          title: 'Booking requests and confirmation',
+          body: 'Choosing a time sends a request to the practice. Your appointment is not confirmed until the practice accepts it. Check your patient portal for the latest status and appointment details.'
         },
         {
-          title: 'Looking Forward',
-          body: 'As we grow, our commitment remains the same: prioritizing the patient-doctor relationship above all else. We are continuously improving our platform to make your care journey as seamless and supportive as possible.'
+          title: 'Consultation methods and scope',
+          body: 'The available consultation format is shown on each service before you request a time. Current options may include Google Meet, WhatsApp, or an in-person visit, depending on the service configuration. Topics listed on this site are for discussion; the clinician will decide whether a consultation is suitable and what next steps are appropriate.'
+        },
+        {
+          title: 'Fees and payment',
+          body: 'Any fee shown with a consultation is an estimate or quote from the practice. Online payment is not currently available through this website. Do not enter card or bank details here. The practice will explain any applicable payment arrangements directly.'
+        },
+        {
+          title: 'Cancellation and rescheduling',
+          body: 'Use the appointment in your patient portal to contact the practice about a cancellation or a different time. A requested change is not complete until the practice confirms it. If you cannot access your account, use the demo contact details below.'
+        },
+        {
+          title: 'Refunds',
+          body: 'This website does not currently collect payments or issue refunds. If you paid the practice through another channel and need help with a refund, contact the practice using the details below and include your appointment date and payment reference. Confirm the practice’s final refund terms before making a payment.'
+        },
+        {
+          title: 'Feedback, complaints, and urgent care',
+          body: 'For feedback or a complaint about a booking or consultation, contact the practice using the details below and include how you would prefer to be contacted. This website and its messaging features are not for emergencies. For urgent or emergency care, contact local emergency services.'
         }
       ]
     }
   };
 
   const data = content[type];
-  const legal = type === 'privacy' || type === 'terms';
+  const legal = type === 'privacy' || type === 'terms' || type === 'policies';
 
   // Map type to an icon
   const getIcon = () => {
@@ -119,6 +146,7 @@ export default function LegalPage({ type }: LegalPageProps) {
       case 'terms': return <Scale size={27} aria-hidden="true" />;
       case 'philosophy': return <Lightbulb size={27} aria-hidden="true" />;
       case 'about': return <Info size={27} aria-hidden="true" />;
+      case 'policies': return <ShieldCheck size={27} aria-hidden="true" />;
       default: return null;
     }
   };
@@ -128,7 +156,7 @@ export default function LegalPage({ type }: LegalPageProps) {
       <header className="static-page__header">
         <div className="static-page__header-inner">
           <Link className="static-page__brand" to="/">
-            <Activity size={19} className="static-page__brand-icon" aria-hidden="true" />
+            <BrandMark className="static-page__brand-icon" />
             <span>Dr. Kiran</span>
           </Link>
           <Link to="/" className="static-page__return">
@@ -159,9 +187,36 @@ export default function LegalPage({ type }: LegalPageProps) {
             ))}
           </article>
 
+          {type === 'policies' && (
+            <section className="practice-policy-contact" aria-labelledby="policy-contact-title">
+              <span className="static-page__eyebrow">Demo details</span>
+              <h2 id="policy-contact-title">Contact the practice</h2>
+              <p>These are temporary demo details for the current build. Replace them with the practice’s confirmed contact information before launch.</p>
+              <dl>
+                <div><dt>Email</dt><dd><a href="mailto:care@ateliercare.example">care@ateliercare.example</a></dd></div>
+                <div><dt>Phone</dt><dd>+91 00000 00000 <span>(demo number)</span></dd></div>
+                <div><dt>Clinician</dt><dd>Dr. Kiran <span>— professional registration details to be supplied by the practice</span></dd></div>
+              </dl>
+            </section>
+          )}
+
+          {type === 'about' && (
+            <section className="about-care-focus" aria-labelledby="about-care-focus-title">
+              <div className="about-care-focus__heading">
+                <span className="static-page__eyebrow">Consultation topics</span>
+                <h2 id="about-care-focus-title">Areas of care</h2>
+                <p>These concerns can be brought to a consultation. The clinician will discuss what assessment or next steps may be appropriate.</p>
+              </div>
+              <div className="about-care-focus__groups">
+                <div><h3>Women's and uterine health</h3><ul><li>Uterine conditions</li><li>Ovarian cysts</li><li>Uterine fibroids</li><li>Irregular menstruation</li><li>Infertility</li></ul></div>
+                <div><h3>Other concerns</h3><ul><li>Kidney stones</li><li>Chronic disease</li></ul></div>
+              </div>
+            </section>
+          )}
+
           <div className="static-page__cta">
-            <Link to={legal ? '/' : '/patient/book'} className="btn btn-primary">
-              {legal ? 'Return to the practice' : 'View consultation options'} <ArrowRight size={16} />
+            <Link to={type === 'policies' ? '/services' : legal ? '/' : '/patient/book'} className="btn btn-primary">
+              {type === 'policies' ? 'View consultation options' : legal ? 'Return to the practice' : 'View consultation options'} <ArrowRight size={16} />
             </Link>
           </div>
         </div>

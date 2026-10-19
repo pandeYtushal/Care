@@ -1,17 +1,27 @@
 import { motion, useScroll } from 'framer-motion';
 import {
   ArrowRight, Video, CalendarDays, FileText, ArrowUpRight,
-  ShieldCheck, Clock3, Stethoscope, X, Heart, Activity, Check,
+  ShieldCheck, Clock3, Stethoscope, X, Heart, Activity, Check, HeartPulse, Plus,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { MotionConfig, useMotionValueEvent } from 'framer-motion';
 import Footer from '../components/Footer';
+import BrandMark from '../components/BrandMark';
 import { api, ApiError } from '../lib/api';
 import '../landing.css';
 
 const ease = [0.16, 1, 0.3, 1] as const;
 type ConsultationService = { id: string; name: string; description: string | null; duration_minutes: number; fee_paise: number | null; currency: string | null; methods: string[] };
+const consultationMethodLabels: Record<string, string> = {
+  GOOGLE_MEET: 'Google Meet',
+  WHATSAPP: 'WhatsApp',
+  IN_PERSON: 'In person',
+};
+const legacySectionPaths: Record<string, string> = {
+  '/care': 'care', '/services': 'services', '/consultations': 'consultations',
+  '/faq': 'faq', '/contact': 'contact',
+};
 
 export default function LandingPage() {
   const location = useLocation();
@@ -29,14 +39,28 @@ export default function LandingPage() {
 
   useEffect(() => {
     setMenuOpen(false);
-    if (location.pathname === '/') { window.scrollTo({ top: 0 }); return; }
-    const map: Record<string, string> = {
-      '/services': 'services', '/consultations': 'consultations',
-      '/faq': 'faq', '/contact': 'contact',
-    };
-    const id = map[location.pathname];
-    if (id) window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }), 0);
-  }, [location.pathname]);
+    const id = location.hash.slice(1) || legacySectionPaths[location.pathname];
+    const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    const frame = window.requestAnimationFrame(() => {
+      if (id) document.getElementById(id)?.scrollIntoView({ behavior, block: 'start' });
+      else if (location.pathname === '/') window.scrollTo({ top: 0, behavior });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.pathname, location.hash]);
+
+  const handlePublicNavigation = (to: string) => {
+    setMenuOpen(false);
+    const [targetPath, targetHash] = to.split('#');
+    if (location.pathname !== (targetPath || '/') || location.hash !== (targetHash ? `#${targetHash}` : '')) return;
+    const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    if (targetHash) document.getElementById(targetHash)?.scrollIntoView({ behavior, block: 'start' });
+    else window.scrollTo({ top: 0, behavior });
+  };
+  const activeNavTarget = location.pathname === '/' && location.hash
+    ? `/${location.hash}`
+    : legacySectionPaths[location.pathname]
+      ? `/#${legacySectionPaths[location.pathname]}`
+      : location.pathname;
 
   useEffect(() => {
     let active = true;
@@ -84,6 +108,23 @@ export default function LandingPage() {
     { icon: Video, step: '04', title: 'Open visit details', desc: 'When a request is accepted, find the visit information and any available meeting link in your appointment.' },
   ];
 
+  const careAreas = [
+    {
+      number: '01',
+      title: "Women's and uterine health",
+      description: 'Topics patients can discuss include:',
+      concerns: ['Uterine conditions', 'Ovarian cysts', 'Uterine fibroids', 'Irregular menstruation', 'Infertility'],
+      icon: HeartPulse,
+    },
+    {
+      number: '02',
+      title: 'Other ongoing concerns',
+      description: 'Consultations may also cover:',
+      concerns: ['Kidney stones', 'Chronic disease'],
+      icon: Activity,
+    },
+  ];
+
   const faqs = [
     { q: 'How do I book an appointment?', a: 'Create or sign in to your patient account, choose an available service and time, then send your request. Follow its status in Appointments.' },
     { q: 'When is my visit confirmed?', a: 'A submitted request appears in your portal while the practice reviews it. Check the appointment status there for the latest update.' },
@@ -99,14 +140,17 @@ export default function LandingPage() {
         {/* ─── NAVBAR ─── */}
         <header className={`lp-header${scrolled ? ' lp-header--scrolled' : ''}`}>
           <div className="lp-container lp-header__inner">
-            <Link to="/" className="lp-logo">
-              <span className="lp-logo__mark" aria-hidden="true"><Activity size={18} /></span>
+            <Link to="/" className="lp-logo" onClick={() => handlePublicNavigation('/')}>
+              <span className="lp-logo__mark"><BrandMark /></span>
               <span className="lp-logo__name">Dr. Kiran</span>
             </Link>
 
             <nav className="lp-nav" aria-label="Main">
-              {[['About', '/about'], ['Philosophy', '/philosophy'], ['How it works', '/consultations'], ['Services', '/services'], ['FAQ', '/faq']].map(([l, to]) => (
-                <Link key={to} to={to} className="lp-nav__link" aria-current={location.pathname === to ? 'page' : undefined}>{l}</Link>
+              {[
+                ['Home', '/'], ['About', '/about'], ['Areas of care', '/#care'],
+                ['How it works', '/#consultations'], ['Services', '/#services'], ['FAQ', '/#faq'],
+              ].map(([l, to]) => (
+                <Link key={to} to={to} className="lp-nav__link" aria-current={activeNavTarget === to ? 'page' : undefined} onClick={() => handlePublicNavigation(to)}>{l}</Link>
               ))}
             </nav>
 
@@ -133,17 +177,20 @@ export default function LandingPage() {
           aria-label={menuOpen ? 'Practice navigation' : undefined}
           aria-hidden={!menuOpen} inert={!menuOpen}>
           <div className="lp-mobile-menu__header">
-            <Link to="/" className="lp-logo" onClick={() => setMenuOpen(false)}>
-              <span className="lp-logo__mark" aria-hidden="true"><Activity size={18} /></span>
+            <Link to="/" className="lp-logo" onClick={() => handlePublicNavigation('/')}>
+              <span className="lp-logo__mark"><BrandMark /></span>
               <span className="lp-logo__name">Dr. Kiran</span>
             </Link>
-            <button type="button" className="btn btn-ghost btn-sm" aria-label="Close" onClick={() => setMenuOpen(false)}>
-              <X size={20} />
+            <button type="button" className="lp-mobile-menu__close btn btn-ghost" aria-label="Close navigation" onClick={() => setMenuOpen(false)}>
+              <X size={27} strokeWidth={2.5} aria-hidden="true" />
             </button>
           </div>
           <nav className="lp-mobile-menu__nav">
-            {[['About', '/about'], ['Philosophy', '/philosophy'], ['How it works', '/consultations'], ['Services', '/services'], ['FAQ', '/faq']].map(([l, to]) => (
-                <Link key={to} to={to} className="lp-mobile-menu__link" aria-current={location.pathname === to ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{l}</Link>
+            {[
+                ['Home', '/'], ['About', '/about'], ['Areas of care', '/#care'],
+                ['How it works', '/#consultations'], ['Services', '/#services'], ['FAQ', '/#faq'],
+            ].map(([l, to]) => (
+                <Link key={to} to={to} className="lp-mobile-menu__link" aria-current={activeNavTarget === to ? 'page' : undefined} onClick={() => handlePublicNavigation(to)}>{l}</Link>
             ))}
           </nav>
           <div className="lp-mobile-menu__footer">
@@ -164,31 +211,26 @@ export default function LandingPage() {
               <motion.div className="lp-hero__copy"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease }}>
 
-                <motion.div className="lp-badge" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease }}>
-                  <Heart size={12} aria-hidden="true" />
-                  Private telemedicine · India
-                </motion.div>
-
                 <motion.h1 className="lp-hero__heading" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.1, ease }}>
-                  Care that truly <span className="lp-hero__heading-accent">listens.</span>
+                  Thoughtful care, <span className="lp-hero__heading-accent">one conversation</span> at a time.
                 </motion.h1>
 
                 <motion.p className="lp-hero__sub" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.2, ease }}>
-                  Meet with Dr. Kiran online, request an available appointment, and keep your visit information together in your patient account.
+                  Discuss women's health, kidney stone concerns, and ongoing conditions with Dr. Kiran. Start by exploring the consultation options currently offered by the practice.
                 </motion.p>
 
                 <motion.div className="lp-hero__actions" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.35, ease }}>
                   <Link to="/patient/book" className="btn btn-primary btn-lg">
-                    See consultation times <ArrowRight size={17} aria-hidden="true" />
+                    View consultation options <ArrowRight size={17} aria-hidden="true" />
                   </Link>
-                  <Link to="/about" className="btn btn-secondary btn-lg">Explore practice</Link>
+                  <Link to="/about" className="btn btn-secondary btn-lg">About the practice</Link>
                 </motion.div>
 
                 <motion.div className="lp-trust-row" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.6 }}>
                   {([
-                    [CalendarDays, 'Request an appointment'],
-                    [FileText, 'Share visit reports'],
-                    [Video, 'Online visit details'],
+                    [CalendarDays, 'Request a visit'],
+                    [FileText, 'Share relevant reports'],
+                    [ShieldCheck, 'Private patient portal'],
                   ] as [React.ElementType, string][]).map(([Icon, text]) => (
                     <span key={text} className="lp-trust-item"><Icon size={14} aria-hidden="true" />{text}</span>
                   ))}
@@ -214,14 +256,42 @@ export default function LandingPage() {
             </div>
           </section>
 
+          {/* ─── CARE AREAS ─── */}
+          <section id="care" className="lp-section lp-care-section">
+            <div className="lp-container lp-care-layout">
+              <div className="lp-care-intro">
+                <span className="eyebrow"><Plus size={13} aria-hidden="true" /> Areas of care</span>
+                <h2>Bring the concern that’s on your mind.</h2>
+                <p>Appointments are a place to discuss your health concerns, ask questions, and understand possible next steps with the clinician.</p>
+                <p className="lp-care-caveat">The right consultation and care plan depend on an individual clinical assessment.</p>
+                <Link to="/patient/book" className="lp-text-link">Explore consultation options <ArrowRight size={15} aria-hidden="true" /></Link>
+              </div>
+              <div className="lp-care-grid">
+                {careAreas.map(({ number, title, description, concerns, icon: Icon }) => (
+                  <article className="lp-care-card" key={number}>
+                    <div className="lp-care-card__top"><span className="lp-care-card__icon"><Icon size={20} aria-hidden="true" /></span><span>{number}</span></div>
+                    <h3>{title}</h3>
+                    <p>{description}</p>
+                    <ul>{concerns.map(concern => <li key={concern}>{concern}</li>)}</ul>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* ─── HOW IT WORKS ─── */}
           <section id="consultations" className="lp-section lp-section--white lp-section--border-top">
             <div className="lp-container">
-              <motion.div className="lp-section__header" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.8, ease }}>
-                <span className="eyebrow">How it works</span>
-                <h2>A clear path to your appointment.</h2>
-                <p>See what happens from the first booking request through the appointment details in your account.</p>
-              </motion.div>
+              <div className="lp-consultations-intro">
+                <motion.div className="lp-section__header" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.8, ease }}>
+                  <span className="eyebrow">How it works</span>
+                  <h2>Know what to expect.</h2>
+                  <p>From choosing a service to finding visit details, each step stays connected to your patient account.</p>
+                </motion.div>
+                <figure className="lp-consultation-visual">
+                  <img src="/images/teleconsultation-illustration.png" alt="Illustration of a doctor and patient meeting through an online consultation." loading="lazy" />
+                </figure>
+              </div>
 
               <div className="lp-steps">
                 {steps.map(({ icon: Icon, step, title, desc }, i) => (
@@ -241,24 +311,30 @@ export default function LandingPage() {
           </section>
 
           {/* ─── SERVICES ─── */}
-          <section id="services" className="lp-section">
+          <section id="services" className="lp-section lp-services-section">
             <div className="lp-container">
-              <div className="lp-section__header">
-                <span className="eyebrow">Care, at your pace</span>
-                <h2>A thoughtful visit, from wherever you are.</h2>
-                <p>Choose an available consultation in the patient portal. Dr. Kiran confirms and shares the visit details there.</p>
+              <div className="lp-section__header lp-services-header">
+                <span className="eyebrow">Consultation options</span>
+                <h2>Choose the service that fits your next step.</h2>
+                <p>These are the options currently listed by the practice. Availability, format, and fees are shown with each service.</p>
               </div>
-              <div className="lp-service-grid">
+              <div className={`lp-service-grid${!servicesLoading && !servicesError && services.length === 1 ? ' lp-service-grid--single' : ''}`}>
                 {servicesLoading ? <p className="lp-state" role="status">Loading current consultation options…</p> : servicesError ? <div className="lp-state lp-state--error" role="alert"><p>{servicesError}</p><button className="lp-inline-action" type="button" onClick={() => { setServicesLoading(true); setServicesError(''); api<{ services: ConsultationService[] }>('/booking/services').then(result => setServices(result.services)).catch(() => setServicesError('Consultation options are temporarily unavailable. Please try again later.')).finally(() => setServicesLoading(false)); }}>Try again</button></div> : services.length === 0 ? <p className="lp-state">There are no consultation options available to book right now. Please check again later.</p> : services.map(service => (
                   <article key={service.id} className="lp-service-card">
-                    <div className="lp-service-card__top"><span className="lp-service-card__icon"><Stethoscope size={21} aria-hidden="true" /></span><span className="lp-service-card__duration">{service.duration_minutes} min</span></div>
-                    <h3>{service.name}</h3>
-                    {service.description && <p>{service.description}</p>}
-                    <div className="lp-service-card__meta">
-                      {service.fee_paise !== null && service.fee_paise !== undefined && <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: service.currency || 'INR', maximumFractionDigits: 0 }).format(service.fee_paise / 100)}</span>}
-                      <span>{service.methods.map(method => method === 'GOOGLE_MEET' ? 'Online' : method === 'IN_PERSON' ? 'In person' : method).join(' · ')}</span>
+                    <div className="lp-service-card__body">
+                      <div className="lp-service-card__top"><span className="lp-service-card__icon"><Stethoscope size={21} aria-hidden="true" /></span><span className="lp-service-card__duration">{service.duration_minutes} min</span></div>
+                      <h3>{service.name}</h3>
+                      {service.description && <p>{service.description}</p>}
+                      <div className="lp-service-card__meta">
+                        {service.fee_paise !== null && service.fee_paise !== undefined && <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: service.currency || 'INR', maximumFractionDigits: 0 }).format(service.fee_paise / 100)}</span>}
+                        <span>{service.methods.map(method => consultationMethodLabels[method] ?? method.replaceAll('_', ' ').toLowerCase()).join(' · ')}</span>
+                      </div>
                     </div>
-                    <Link to="/patient/book" className="lp-service-card__link">Choose a time <ArrowUpRight size={16} aria-hidden="true" /></Link>
+                    <div className="lp-service-card__booking">
+                      <span>Next step</span>
+                      <p>Select an available time and send a request to the practice.</p>
+                      <Link to="/patient/book" className="lp-service-card__link">Choose a time <ArrowUpRight size={16} aria-hidden="true" /></Link>
+                    </div>
                   </article>
                 ))}
               </div>
@@ -266,22 +342,17 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* ─── PHILOSOPHY QUOTE ─── */}
-          <section className="lp-quote-section">
-            <div className="lp-quote-section__glow" aria-hidden="true" />
-            <div className="lp-container lp-quote-section__inner">
-              <motion.div className="lp-quote-section__rule" initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, ease }} />
-              <motion.blockquote className="lp-quote-section__quote" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 1, delay: 0.1, ease }}>
-                “A thoughtful conversation is a good place to begin.”
-              </motion.blockquote>
-              <motion.cite className="lp-quote-section__cite" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.4 }}>
-                Atelier Care · Dr. Kiran
-              </motion.cite>
+          {/* ─── CARE PRINCIPLE ─── */}
+          <section className="lp-principle-section">
+            <div className="lp-container lp-principle-layout">
+              <span className="lp-principle-mark" aria-hidden="true"><HeartPulse size={22} /></span>
+              <div><span className="eyebrow">A considered approach</span><h2>Care starts with listening, then moves at your pace.</h2></div>
+              <Link to="/philosophy" className="lp-principle-link">Our care philosophy <ArrowUpRight size={16} aria-hidden="true" /></Link>
             </div>
           </section>
 
           {/* ─── FAQ ─── */}
-          <section id="faq" className="lp-section lp-section--white lp-section--border-top">
+          <section id="faq" className="lp-section lp-faq-section lp-section--white lp-section--border-top">
             <div className="lp-container lp-faq__layout">
               <div className="lp-faq__intro">
                 <span className="eyebrow">FAQ</span>
@@ -291,7 +362,7 @@ export default function LandingPage() {
               <div className="lp-faq__list">
                 {faqs.map(({ q, a }) => (
                   <details key={q} className="lp-faq__item">
-                    <summary>{q}<span aria-hidden="true">+</span></summary>
+                    <summary>{q}<span aria-hidden="true" /></summary>
                     <p>{a}</p>
                   </details>
                 ))}

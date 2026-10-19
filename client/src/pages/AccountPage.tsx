@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { ArrowRight, CheckCircle2, Phone } from 'lucide-react';
 import { api, ApiError } from '../lib/api';
 import { useAuth } from '../auth/AuthProvider';
+import { PageHeader } from '../portal/PortalPrimitives';
 
 export default function AccountPage() {
   const { user } = useAuth();
@@ -52,24 +53,28 @@ export default function AccountPage() {
 
   return (
     <main className="portal-content account-page">
-      <div className="eyebrow">ACCOUNT</div>
-      <h1>Sign-in &amp; security</h1>
-      <p className="page-subtitle">Manage the details you use to access your private care space.</p>
+      <PageHeader
+        eyebrow="ACCOUNT"
+        title="Sign-in & security"
+        description="Manage the details you use to access your private care space."
+      />
 
-      <section className="account-card" aria-labelledby="phone-link-title">
-        <div className="account-feature-icon"><Phone size={19} aria-hidden="true" /></div>
-        <div className="account-card-heading">
-          <span className="eyebrow">PHONE VERIFICATION</span>
-          <h2 id="phone-link-title">Connect a mobile number</h2>
-          <p>Verify a number to use one-time SMS codes when signing in.</p>
+      <section className="account-card patient-security-card" aria-labelledby="phone-link-title">
+        <div className="account-security-intro">
+          <div className="account-feature-icon"><Phone size={19} aria-hidden="true" /></div>
+          <div className="account-card-heading">
+            <span className="eyebrow">PHONE VERIFICATION</span>
+            <h2 id="phone-link-title">Connect a mobile number</h2>
+            <p>Verify a number to use one-time SMS codes when signing in.</p>
+          </div>
         </div>
+        <div className="account-security-form">
+          <div className="account-identity">
+            <span>Current sign-in email</span>
+            <strong>{user?.email || 'Email unavailable'}</strong>
+          </div>
 
-        <div className="account-identity">
-          <span>Current sign-in email</span>
-          <strong>{user?.email || 'Email unavailable'}</strong>
-        </div>
-
-        <form className="auth-form" onSubmit={verify}>
+          <form className="auth-form" onSubmit={verify}>
           <label>
             Mobile number
             <input
@@ -122,7 +127,8 @@ export default function AccountPage() {
               {busy ? 'Verifying…' : 'Verify and link phone'} {!busy && <ArrowRight size={16} aria-hidden="true" />}
             </button>
           )}
-        </form>
+          </form>
+        </div>
       </section>
     </main>
   );

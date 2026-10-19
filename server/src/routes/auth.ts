@@ -9,6 +9,7 @@ import { clearSessionCookie, setSessionCookie } from '../middleware/cookies';
 import { rateLimit } from '../middleware/rateLimit';
 import { sendPasswordResetEmail } from '../integrations/email';
 import { externalFetch } from '../integrations/http';
+import { profileNameForRole, safeUser } from '../auth/identity';
 
 const router = Router();
 const authLimit = rateLimit(8, 15 * 60 * 1000);
@@ -37,10 +38,6 @@ async function createSession(userId: string) {
   await pool.query('INSERT INTO user_sessions (user_id, token_hash, expires_at) VALUES ($1, $2, $3)', [userId, hashSessionToken(token), expiresAt]);
   return { token, expiresAt };
 }
-function safeUser(row: Record<string, unknown>) {
-  return { id: row.id, email: row.email, role: row.role, fullName: row.full_name ?? row.display_name ?? null };
-}
-
 const oauthCookieOptions = `Path=/; HttpOnly; SameSite=Lax; Max-Age=600${env.nodeEnv === 'production' ? '; Secure' : ''}`;
 function setOAuthCookie(res: Parameters<typeof setSessionCookie>[0], name: string, value: string) {
   res.append('Set-Cookie', `${name}=${encodeURIComponent(value)}; ${oauthCookieOptions}`);
@@ -344,10 +341,15 @@ router.post('/logout', asyncRoute(async (req, res) => {
 
 router.get('/me', requireAuth, asyncRoute(async (req, res) => {
   const user = req.user!;
-  const result = user.patientId
-    ? await pool.query('SELECT full_name FROM patients WHERE id = $1', [user.patientId])
-    : user.doctorId ? await pool.query('SELECT display_name AS full_name FROM doctors WHERE id = $1', [user.doctorId]) : { rows: [] };
-  return res.json({ user: { id: user.id, email: user.email, role: user.role, fullName: result.rows[0]?.full_name ?? null } });
+  if (user.role === 'DOCTOR' && user.doctorId) {
+    const result = await pool.query('SELECT display_name FROM doctors WHERE id = $1', [user.doctorId]);
+    return res.json({ user: { id: user.id, email: user.email, role: user.role, fullName: profileNameForRole(user.role, result.rows[0] ?? {}) } });
+  }
+  if (user.role === 'PATIENT' && user.patientId) {
+    const result = await pool.query('SELECT full_name FROM patients WHERE id = $1', [user.patientId]);
+    return res.json({ user: { id: user.id, email: user.email, role: user.role, fullName: profileNameForRole(user.role, result.rows[0] ?? {}) } });
+  }
+  return res.json({ user: { id: user.id, email: user.email, role: user.role, fullName: null } });
 }));
 
 export default router;

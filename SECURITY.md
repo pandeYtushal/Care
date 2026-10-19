@@ -20,7 +20,7 @@ Avoid putting any of these values in logs, support tickets, browser screenshots,
 ## Environment and secrets
 
 - Keep real values in ignored server-side environment configuration or a deployment secrets manager. Never put server secrets in `VITE_*` variables.
-- `.gitignore` excludes `.env` and `.env.*` while allowing `.env.example`. The current workspace is not a Git repository, so its commit history and already-published secrets could not be audited.
+- `.gitignore` excludes `.env` and `.env.*` while allowing `.env.example`. The current repository exists, but this guide does not audit commit history or remotes; review both before publishing and rotate any secrets that were ever committed.
 - A prior screenshot in the development conversation showed part of an environment file. If any real credential was fully visible, revoke/rotate it. Rotating `GOOGLE_TOKEN_ENCRYPTION_KEY` makes existing Calendar token ciphertext unreadable; reconnect calendars or plan a controlled token re-encryption before rotating it.
 - Use unique high-entropy secrets per environment. Do not copy development database/provider credentials to production.
 
