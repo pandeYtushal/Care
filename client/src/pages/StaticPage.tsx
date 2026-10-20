@@ -165,7 +165,7 @@ export default function LegalPage({ type }: LegalPageProps) {
         </div>
       </header>
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <div className={`static-page__hero static-page__hero--${type}`}>
           <div className="static-page__hero-inner">
             <div className="static-page__hero-copy">

@@ -32,7 +32,7 @@ export default function PasswordRecoveryPage({ mode }: { mode: 'request' | 'rese
     finally { setBusy(false); }
   }
 
-  return <main className="auth-page">
+  return <main id="main-content" tabIndex={-1} className="auth-page">
     <aside className="auth-story">
       <Link to="/" className="auth-brand"><span className="auth-brand-mark"><BrandMark /></span><span>Dr. Kiran</span></Link>
       <div className="auth-story-copy"><div className="auth-eyebrow">PRIVATE PATIENT CARE</div><h1>A little help getting back to your care.</h1><p>Your account stays private and protected.</p></div>

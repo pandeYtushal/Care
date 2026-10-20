@@ -771,6 +771,26 @@
 .patient-portal .report-record-body p { margin: 5px 0 0; overflow-wrap: anywhere; }
 .patient-portal .report-view-link { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 6px; padding: 0 11px; border: 1px solid #dfe6dc; border-radius: 9px; color: #3e694d; background: #fffefa; font-size: 11px; font-weight: 650; text-decoration: none; white-space: nowrap; }
 .patient-portal .report-view-link:hover { border-color: #aabdac; background: #f5f8f2; }
+.patient-portal .report-record-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.patient-portal .report-delete-button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; border: 1px solid transparent; border-radius: 9px; color: #925646; background: transparent; font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; }
+.patient-portal .report-delete-button:hover:not(:disabled) { border-color: #eadbd5; background: #fbf5f2; }
+.patient-portal .report-delete-button:disabled { cursor: wait; opacity: .6; }
+.patient-portal .patient-reschedule-panel { margin: 17px 0; padding: 17px 18px; border: 1px solid #e1e7dd; border-radius: 12px; background: #f7f8f4; }
+.patient-portal .patient-reschedule-heading h2 { margin: 0; color: #294536; font-size: 15px; font-weight: 650; }
+.patient-portal .patient-reschedule-heading p,
+.patient-portal .patient-reschedule-pending p { margin: 5px 0 12px; color: #6b796f; font-size: 12px; line-height: 1.5; }
+.patient-portal .patient-reschedule-panel form { display: grid; gap: 12px; }
+.patient-portal .patient-reschedule-panel form > label { display: grid; max-width: 270px; gap: 6px; color: #637268; font-size: 11px; font-weight: 650; }
+.patient-portal .patient-reschedule-panel input[type="date"] { min-height: 42px; padding: 0 10px; border: 1px solid #dce3d9; border-radius: 8px; color: #2c4335; background: #fff; }
+.patient-portal .patient-reschedule-slots { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.patient-portal .patient-reschedule-slots > span { flex-basis: 100%; color: #637268; font-size: 11px; font-weight: 650; }
+.patient-portal .patient-reschedule-slots > button { min-height: 38px; padding: 0 10px; border: 1px solid #dce3d9; border-radius: 8px; color: #395c46; background: #fff; font: inherit; font-size: 11px; cursor: pointer; }
+.patient-portal .patient-reschedule-slots > button:hover,
+.patient-portal .patient-reschedule-slots > button.is-selected { border-color: #588065; background: #eaf1e8; }
+.patient-portal .patient-reschedule-slots > p { flex-basis: 100%; margin: 0; color: #778279; font-size: 11px; }
+.patient-portal .patient-reschedule-panel form > .btn { justify-self: start; }
+.patient-portal .patient-reschedule-pending { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; }
+.patient-portal .patient-reschedule-pending p { margin: 0; }
 .patient-portal .report-empty-state { margin: 0; padding: clamp(28px, 5vw, 48px) 20px; }
 .patient-portal .report-storage-note { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: #748178; font-size: 11px; line-height: 1.55; }
 .patient-portal .report-storage-note svg { flex: 0 0 auto; margin-top: 1px; color: #65836a; }
@@ -786,7 +806,10 @@
   .patient-portal .report-documents-card .reports-controls { grid-template-columns: minmax(0, 1fr); }
   .patient-portal .report-record-list > .report-record-item { grid-template-columns: 38px minmax(0, 1fr); gap: 10px; padding: 12px; }
   .patient-portal .report-record-list .report-record-icon { width: 36px; height: 36px; }
-  .patient-portal .report-view-link { grid-column: 2; justify-self: start; }
+  .patient-portal .report-record-actions { grid-column: 2; justify-self: start; flex-wrap: wrap; justify-content: flex-start; }
+  .patient-portal .patient-reschedule-panel { padding: 14px; }
+  .patient-portal .patient-reschedule-pending { align-items: flex-start; flex-direction: column; }
+  .patient-portal .patient-reschedule-panel form > .btn { width: 100%; }
 }
 
 /* Care history uses a true, compact timeline on both small and large screens. */

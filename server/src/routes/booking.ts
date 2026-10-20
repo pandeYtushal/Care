@@ -26,24 +26,26 @@ function zonedToUtc(date: string, time: string, zone: string) {
   }
   return new Date(estimate);
 }
-function localDate(at: Date, zone: string) {
+export function localDate(at: Date, zone: string) {
   const p=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(at).map(x=>[x.type,x.value]));
   return `${p.year}-${p.month}-${p.day}`;
 }
 function timeText(value: unknown) { return String(value).slice(0,5); }
 type Slot = {startsAt:Date;endsAt:Date};
-async function getSlots(client: {query: typeof pool.query}, doctorId:string, serviceId:string, date:string):Promise<Slot[]> {
+export async function getSlots(client: {query: typeof pool.query}, doctorId:string, serviceId:string, date:string, excludeAppointmentId?:string, excludeRescheduleRequestId?:string):Promise<Slot[]> {
   const sr=await client.query(`SELECT s.duration_minutes,s.methods,d.timezone FROM services s JOIN doctors d ON d.id=s.doctor_id WHERE s.id=$1 AND s.doctor_id=$2 AND s.active=true`,[serviceId,doctorId]);
   if(!sr.rowCount) throw new HttpError(404,'That consultation service is not available.');
   const {duration_minutes:duration,methods,timezone}=sr.rows[0] as {duration_minutes:number;methods:string[];timezone:string};
   let weekday=new Date(`${date}T12:00:00Z`).getUTCDay();
   const rules=await client.query(`SELECT starts_at,ends_at,slot_minutes,buffer_minutes FROM availability_rules WHERE doctor_id=$1 AND weekday=$2 AND active=true`,[doctorId,weekday]);
   const dayStart=zonedToUtc(date,'00:00',timezone), dayEnd=zonedToUtc(dateShift(date,1),'00:00',timezone);
-  const [booked,exceptions]=await Promise.all([
-    client.query(`SELECT starts_at,ends_at FROM appointments WHERE doctor_id=$1 AND starts_at<$3 AND ends_at>$2 AND status IN ('PENDING','PAYMENT_PENDING','CONFIRMED','UPCOMING','IN_PROGRESS')`,[doctorId,dayStart,dayEnd]),
+  const [booked,exceptions,rescheduleRequests]=await Promise.all([
+    client.query(`SELECT starts_at,ends_at FROM appointments WHERE doctor_id=$1 AND starts_at<$3 AND ends_at>$2 AND status IN ('PENDING','PAYMENT_PENDING','CONFIRMED','UPCOMING','IN_PROGRESS') AND ($4::uuid IS NULL OR id<>$4)`,[doctorId,dayStart,dayEnd,excludeAppointmentId??null]),
     client.query(`SELECT starts_at,ends_at FROM availability_exceptions WHERE doctor_id=$1 AND unavailable=true AND starts_at<$3 AND ends_at>$2`,[doctorId,dayStart,dayEnd]),
+    client.query(`SELECT proposed_starts_at AS starts_at,proposed_ends_at AS ends_at FROM appointment_reschedule_requests
+      WHERE doctor_id=$1 AND status='PENDING' AND proposed_starts_at<$3 AND proposed_ends_at>$2 AND ($4::uuid IS NULL OR id<>$4)`,[doctorId,dayStart,dayEnd,excludeRescheduleRequestId??null]),
   ]);
-  const unavailable=[...booked.rows,...exceptions.rows].map(r=>({start:new Date(r.starts_at as string).getTime(),end:new Date(r.ends_at as string).getTime()}));
+  const unavailable=[...booked.rows,...exceptions.rows,...rescheduleRequests.rows].map(r=>({start:new Date(r.starts_at as string).getTime(),end:new Date(r.ends_at as string).getTime()}));
   const now=Date.now(),slots:Slot[]=[];
   for(const rule of rules.rows){
     const [sh,sm]=timeText(rule.starts_at).split(':').map(Number);const [eh,em]=timeText(rule.ends_at).split(':').map(Number);

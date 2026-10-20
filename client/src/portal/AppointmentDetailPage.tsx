@@ -4,6 +4,16 @@ import { api, ApiError } from "../lib/api";
 import { dateTime, localDateTimeInput, safeGoogleMeetUrl } from "./format";
 import { Empty, PrescriptionList, RecordList, Status } from "./PortalPrimitives";
 
+function localDateValue(timezone: string, date = new Date()) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date).map((part) => [part.type, part.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+function dateOffset(value: string, days: number) {
+  const date = new Date(`${value}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 export default function AppointmentDetailPage({ role }: { role: "PATIENT" | "DOCTOR" }) {
   const { id = "" } = useParams();
   const [data, setData] = useState<Record<string, unknown> | null>(null);
@@ -12,6 +22,12 @@ export default function AppointmentDetailPage({ role }: { role: "PATIENT" | "DOC
     [reload, setReload] = useState(0),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState("");
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleSlots, setRescheduleSlots] = useState<Array<{ startsAt: string; endsAt: string }>>([]);
+  const [rescheduleSlotsLoading, setRescheduleSlotsLoading] = useState(false);
+  const [selectedRescheduleSlot, setSelectedRescheduleSlot] = useState("");
+  const [rescheduleError, setRescheduleError] = useState("");
+  const [rescheduleMessage, setRescheduleMessage] = useState("");
   const requestId = useRef(0);
   const [notes, setNotes] = useState(""),
     [assessment, setAssessment] = useState(""),
@@ -74,12 +90,44 @@ export default function AppointmentDetailPage({ role }: { role: "PATIENT" | "DOC
   useEffect(() => {
     load();
   }, [load, reload]);
+  useEffect(() => {
+    if (role !== "PATIENT" || !rescheduleDate || typeof data?.serviceId !== "string") {
+      setRescheduleSlots([]);
+      setSelectedRescheduleSlot("");
+      return;
+    }
+    let active = true;
+    setRescheduleSlotsLoading(true);
+    setRescheduleError("");
+    const query = new URLSearchParams({ serviceId: data.serviceId, date: rescheduleDate });
+    void api<{ slots: Array<{ startsAt: string; endsAt: string }> }>(`/booking/slots?${query}`)
+      .then((result) => { if (active) setRescheduleSlots(result.slots ?? []); })
+      .catch((reason: unknown) => { if (active) setRescheduleError(reason instanceof ApiError ? reason.message : "Could not load available times."); })
+      .finally(() => { if (active) setRescheduleSlotsLoading(false); });
+    return () => { active = false; };
+  }, [data?.serviceId, rescheduleDate, role]);
   const consultationDirty = role === "DOCTOR" && savedConsultation !== null && (
     notes !== savedConsultation.notes || assessment !== savedConsultation.assessment ||
     diagnosisCode !== savedConsultation.diagnosisCode || patientSummary !== savedConsultation.patientSummary ||
     followUpAt !== savedConsultation.followUpAt
   );
   const consultationComplete = data?.status === "COMPLETED" || Boolean(data?.completedAt);
+  const visitNextStep = (() => {
+    switch (String(data?.status ?? "").toUpperCase()) {
+      case "PENDING":
+      case "REQUESTED":
+        return "The practice will review your request and update its status here.";
+      case "ACCEPTED":
+      case "CONFIRMED":
+        return "Your visit is confirmed. Check this appointment for meeting details.";
+      case "COMPLETED":
+        return "Your visit is complete. Any notes and prescriptions appear below.";
+      case "CANCELLED":
+        return "This visit was cancelled. Contact the practice if you need help.";
+      default:
+        return "Updates from the practice will appear here.";
+    }
+  })();
   useEffect(() => {
     if (!consultationDirty) return;
     const warnBeforeUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
@@ -161,6 +209,58 @@ export default function AppointmentDetailPage({ role }: { role: "PATIENT" | "DOC
       setBusy(false);
     }
   }
+  async function respondToRequest(status: "CONFIRMED" | "CANCELLED") {
+    if (status === "CANCELLED" && !window.confirm("Decline this appointment request? The patient will be notified.")) return;
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      await api(`/portal/appointments/${encodeURIComponent(id)}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      setNotice(status === "CONFIRMED" ? "Request accepted. You can now prepare the consultation." : "Request declined. The patient has been notified.");
+      setReload((value) => value + 1);
+    } catch (reason) {
+      setError(reason instanceof ApiError ? reason.message : "Could not update this appointment request.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function requestReschedule(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedRescheduleSlot) return;
+    setBusy(true);setRescheduleError("");setRescheduleMessage("");
+    try {
+      await api(`/portal/appointments/${encodeURIComponent(id)}/reschedule-request`, { method: "POST", body: JSON.stringify({ startsAt: selectedRescheduleSlot }) });
+      setRescheduleMessage("Your new time request was sent to the practice.");
+      setReload((value) => value + 1);
+    } catch (reason) {
+      setRescheduleError(reason instanceof ApiError ? reason.message : "Could not request a new time.");
+    } finally { setBusy(false); }
+  }
+  async function cancelRescheduleRequest() {
+    setBusy(true);setRescheduleError("");setRescheduleMessage("");
+    try {
+      await api(`/portal/appointments/${encodeURIComponent(id)}/reschedule-request/cancel`, { method: "POST", body: "{}" });
+      setRescheduleMessage("Your pending time request was cancelled.");
+      setReload((value) => value + 1);
+    } catch (reason) {
+      setRescheduleError(reason instanceof ApiError ? reason.message : "Could not cancel the time request.");
+    } finally { setBusy(false); }
+  }
+  async function decideReschedule(decision: "ACCEPTED" | "DECLINED") {
+    const request = data?.rescheduleRequest as { id?: string } | null;
+    if (!request?.id) return;
+    setBusy(true);setRescheduleError("");setRescheduleMessage("");
+    try {
+      await api(`/portal/reschedule-requests/${encodeURIComponent(request.id)}`, { method: "PATCH", body: JSON.stringify({ decision }) });
+      setRescheduleMessage(decision === "ACCEPTED" ? "The appointment time was changed and the patient was notified." : "The time change was declined and the patient was notified.");
+      setReload((value) => value + 1);
+    } catch (reason) {
+      setRescheduleError(reason instanceof ApiError ? reason.message : "Could not update the time request.");
+    } finally { setBusy(false); }
+  }
   return (
     <main
       className={`portal-content ${role === "DOCTOR" ? "doctor-consultation doctor-appointment-workflow" : "patient-appointment-detail"}`}
@@ -173,9 +273,10 @@ export default function AppointmentDetailPage({ role }: { role: "PATIENT" | "DOC
       </Link>
       {role === "DOCTOR" ? (
         <header className="doctor-consultation-page-heading">
-          <span>APPOINTMENT WORKSPACE</span>
+          <span>CLINICIAN WORKSPACE · APPOINTMENT</span>
           <h1>{data ? String(data.patientName ?? "Patient") : "Appointment"}</h1>
-          <p>Review visit details, record the consultation, and manage treatment.</p>
+          <p>Review this patient’s request, records, and consultation.</p>
+          {typeof data?.patientId === "string" && data.patientId && <Link className="doctor-patient-record-link" to={`/doctor/patients/${encodeURIComponent(data.patientId)}`}>Open patient record <span aria-hidden="true">↗</span></Link>}
         </header>
       ) : (
         <h1>Appointment details</h1>
@@ -195,7 +296,16 @@ export default function AppointmentDetailPage({ role }: { role: "PATIENT" | "DOC
                     {role === "PATIENT" && <span>Dr. {String(data.doctorName ?? "Your clinician")}</span>}
                   </div>
                 </div>
-                {safeGoogleMeetUrl(data.meetingUrl) &&
+                {role === "PATIENT" ? (
+                  <aside className="patient-visit-next-step">
+                    <span>WHAT HAPPENS NEXT</span>
+                    <p>{visitNextStep}</p>
+                    {safeGoogleMeetUrl(data.meetingUrl) &&
+                      !["COMPLETED", "CANCELLED", "NO_SHOW"].includes(String(data.status)) && (
+                        <a className="btn btn-primary" href={safeGoogleMeetUrl(data.meetingUrl)!} target="_blank" rel="noreferrer">Join Google Meet <span aria-hidden="true">↗</span></a>
+                      )}
+                  </aside>
+                ) : safeGoogleMeetUrl(data.meetingUrl) &&
                   !["COMPLETED", "CANCELLED", "NO_SHOW"].includes(
                     String(data.status),
                   ) && (
@@ -205,9 +315,7 @@ export default function AppointmentDetailPage({ role }: { role: "PATIENT" | "DOC
                       target="_blank"
                       rel="noreferrer"
                     >
-                      {role === "DOCTOR"
-                        ? "Start Google Meet"
-                        : "Join Google Meet"}
+                      Start Google Meet
                     </a>
                   )}
               </div>
@@ -251,6 +359,38 @@ export default function AppointmentDetailPage({ role }: { role: "PATIENT" | "DOC
                 </div>
               )}
             </section>
+            {role === "PATIENT" && ["CONFIRMED", "UPCOMING"].includes(String(data.status)) && new Date(String(data.startsAt)).getTime() > Date.now() && (
+              <section className="patient-reschedule-panel" aria-labelledby="patient-reschedule-title">
+                <div className="patient-reschedule-heading"><h2 id="patient-reschedule-title">Need a different time?</h2><p>Your current appointment stays booked until the practice approves a change.</p></div>
+                {data.rescheduleRequest ? (
+                  <div className="patient-reschedule-pending" role="status">
+                    <p>Waiting for the practice to review <strong>{dateTime(String((data.rescheduleRequest as Record<string, unknown>).startsAt), String(data.timezone ?? "Asia/Kolkata"))}</strong>.</p>
+                    <button className="btn btn-secondary" type="button" disabled={busy} onClick={() => void cancelRescheduleRequest()}>{busy ? "Updating…" : "Cancel time request"}</button>
+                  </div>
+                ) : (
+                  <form onSubmit={(event) => void requestReschedule(event)}>
+                    <label><span>Choose a new date · {String(data.timezone ?? "Practice time")}</span><input required type="date" min={localDateValue(String(data.timezone ?? "Asia/Kolkata"))} max={dateOffset(localDateValue(String(data.timezone ?? "Asia/Kolkata")), 90)} value={rescheduleDate} onChange={(event) => { setRescheduleDate(event.target.value);setSelectedRescheduleSlot(""); }} /></label>
+                    {rescheduleDate && <div className="patient-reschedule-slots" aria-live="polite">
+                      <span>Available times</span>
+                      {rescheduleSlotsLoading ? <p>Checking availability…</p> : rescheduleSlots.length ? rescheduleSlots.map((slot) => <button type="button" key={slot.startsAt} aria-pressed={selectedRescheduleSlot === slot.startsAt} className={selectedRescheduleSlot === slot.startsAt ? "is-selected" : ""} onClick={() => setSelectedRescheduleSlot(slot.startsAt)}>{dateTime(slot.startsAt, String(data.timezone ?? "Asia/Kolkata"))}</button>) : !rescheduleError && <p>No times are available on this date. Try another day.</p>}
+                    </div>}
+                    {rescheduleError && <p className="form-error" role="alert">{rescheduleError}</p>}
+                    {rescheduleMessage && <p className="form-notice" role="status">{rescheduleMessage}</p>}
+                    <button className="btn btn-secondary" type="submit" disabled={busy || rescheduleSlotsLoading || !selectedRescheduleSlot}>{busy ? "Sending…" : "Request this time"}</button>
+                  </form>
+                )}
+                {rescheduleMessage && !data.rescheduleRequest && <p className="form-notice" role="status">{rescheduleMessage}</p>}
+                {rescheduleError && Boolean(data.rescheduleRequest) && <p className="form-error" role="alert">{rescheduleError}</p>}
+              </section>
+            )}
+            {role === "DOCTOR" && data.rescheduleRequest && (
+              <section className="doctor-reschedule-review" aria-labelledby="doctor-reschedule-title">
+                <div><span>TIME CHANGE REQUEST</span><h2 id="doctor-reschedule-title">Review the proposed time</h2><p>{dateTime(String((data.rescheduleRequest as Record<string, unknown>).startsAt), String(data.timezone ?? "Asia/Kolkata"))}</p></div>
+                {rescheduleError && <p className="form-error" role="alert">{rescheduleError}</p>}
+                {rescheduleMessage && <p className="form-notice" role="status">{rescheduleMessage}</p>}
+                <div><button type="button" className="btn btn-primary" disabled={busy} onClick={() => void decideReschedule("ACCEPTED")}>{busy ? "Updating…" : "Approve new time"}</button><button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void decideReschedule("DECLINED")}>Decline request</button></div>
+              </section>
+            )}
             <section className={`card ${role === "PATIENT" ? "patient-detail-section patient-detail-records" : "doctor-appointment-files"}`}>
               <div className="patient-detail-section-heading"><div>{role === "DOCTOR" && <span>ATTACHED TO THIS VISIT</span>}<h2>{role === "PATIENT" ? "Shared documents" : "Files shared for this appointment"}</h2></div>{role === "PATIENT" && <span>For this visit</span>}</div>
               <RecordList
@@ -258,6 +398,21 @@ export default function AppointmentDetailPage({ role }: { role: "PATIENT" | "DOC
               />
             </section>
             {role === "DOCTOR" ? (
+              data.status === "PENDING" ? (
+                <section className="card doctor-request-decision" aria-labelledby="doctor-request-decision-title">
+                  <div><span>REQUEST DECISION</span><h2 id="doctor-request-decision-title">Review booking request</h2><p>Check the patient’s information and shared files above, then respond to the request.</p></div>
+                  {notice && <p className="form-notice" role="status">{notice}</p>}
+                  <div className="doctor-request-decision-actions">
+                    <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void respondToRequest("CONFIRMED")}>{busy ? "Updating…" : "Accept appointment"}</button>
+                    <button className="btn btn-secondary" type="button" disabled={busy} onClick={() => void respondToRequest("CANCELLED")}>Decline request</button>
+                  </div>
+                </section>
+              ) : ["CANCELLED", "NO_SHOW"].includes(String(data.status)) ? (
+                <section className="doctor-request-closed" role="status">
+                  <strong>{data.status === "CANCELLED" ? "This appointment is cancelled." : "This appointment was marked as a no-show."}</strong>
+                  <p>Consultation notes and prescription actions are unavailable for this visit.</p>
+                </section>
+              ) : (
               <>
                 <section className="card consultation-form doctor-notes-card">
                   <div className="consultation-heading"><div><span>CLINICAL RECORD</span><h2>Consultation notes</h2></div><span className={`consultation-save-state${consultationDirty ? " is-dirty" : ""}`} role="status">{consultationComplete ? "Completed · read only" : consultationDirty ? "Unsaved changes" : "Saved"}</span></div>
@@ -483,16 +638,19 @@ export default function AppointmentDetailPage({ role }: { role: "PATIENT" | "DOC
                   </form>
                 </section>
               </>
+              )
             ) : (
-              <>
+              <div className="patient-appointment-record-grid">
                 <section className="card patient-detail-section patient-visit-summary">
                   <div className="patient-detail-section-heading"><h2>Visit summary</h2><span>From your clinician</span></div>
-                  <p className="patient-summary-copy">
-                    {String(
-                      data.patientSummary ??
-                      "Your clinician has not added a visit summary yet.",
-                    )}
-                  </p>
+                  {typeof data.patientSummary === "string" && data.patientSummary.trim() ? (
+                    <p className="patient-summary-copy">{data.patientSummary}</p>
+                  ) : (
+                    <Empty
+                      title="No visit summary yet"
+                      text="Your clinician has not added a summary for this visit."
+                    />
+                  )}
                   {typeof data.followUpAt === "string" && (
                     <p>Follow-up: {dateTime(String(data.followUpAt))}</p>
                   )}
@@ -506,7 +664,7 @@ export default function AppointmentDetailPage({ role }: { role: "PATIENT" | "DOC
                     role="PATIENT"
                   />
                 </section>
-              </>
+              </div>
             )}
           </>
         )}

@@ -2,9 +2,10 @@ import { Router } from 'express';
 import { pool } from '../db';
 import { asyncRoute, HttpError, requiredUuid } from '../http';
 import { requireAuth, requireRole } from '../middleware/auth';
-import { createAppointmentEvent } from '../integrations/googleCalendar';
+import { createAppointmentEvent, updateAppointmentEventTime } from '../integrations/googleCalendar';
 import { createHash, randomUUID } from 'node:crypto';
 import { rateLimit } from '../middleware/rateLimit';
+import { getSlots, localDate } from './booking';
 
 const router = Router();
 router.use(requireAuth);
@@ -70,13 +71,15 @@ router.get('/appointments', asyncRoute(async (req, res) => {
 router.get('/appointments/:id', requireRole('PATIENT','DOCTOR'), asyncRoute(async(req,res)=>{
   const appointmentId=requiredUuid(req.params.id,'appointment id');
   const patient=req.user!.role==='PATIENT';
-  const result=await pool.query(`SELECT a.id,a.starts_at,a.ends_at,a.status,a.method,a.meeting_url,a.problem_description,a.symptoms,a.symptoms_started,a.severity,
+  const result=await pool.query(`SELECT a.id,a.patient_id,a.starts_at,a.ends_at,a.status,a.method,a.meeting_url,a.problem_description,a.symptoms,a.symptoms_started,a.severity,
       a.medication_notes,a.condition_notes,a.allergy_notes,a.previous_treatments,a.additional_notes,
-      s.name AS service_name,s.duration_minutes,s.fee_paise,d.display_name AS doctor_name,d.timezone,p.full_name AS patient_name,
+      s.id AS service_id,s.name AS service_name,s.duration_minutes,s.fee_paise,d.display_name AS doctor_name,d.timezone,p.full_name AS patient_name,
+      rr.id AS reschedule_request_id,rr.proposed_starts_at AS proposed_starts_at,rr.proposed_ends_at AS proposed_ends_at,
       ${patient?'NULL::text AS patient_email,NULL::text AS patient_phone':'u.email AS patient_email,u.phone AS patient_phone'},
       c.id AS consultation_id,c.notes,c.assessment,c.diagnosis_code,c.follow_up_at,c.completed_at,c.patient_summary
     FROM appointments a JOIN services s ON s.id=a.service_id JOIN doctors d ON d.id=a.doctor_id JOIN patients p ON p.id=a.patient_id
     JOIN users u ON u.id=p.user_id LEFT JOIN consultations c ON c.appointment_id=a.id
+    LEFT JOIN appointment_reschedule_requests rr ON rr.appointment_id=a.id AND rr.status='PENDING'
     WHERE a.id=$1 AND a.${patient?'patient_id':'doctor_id'}=$2`,[appointmentId,patient?req.user!.patientId:req.user!.doctorId]);
   if(!result.rowCount)throw new HttpError(404,'Appointment not found.');
   const row=result.rows[0];
@@ -84,7 +87,7 @@ router.get('/appointments/:id', requireRole('PATIENT','DOCTOR'), asyncRoute(asyn
       COALESCE(json_agg(json_build_object('medicine',i.medicine,'dosage',i.dosage,'frequency',i.frequency,'duration',i.duration,'instructions',i.instructions) ORDER BY i.position) FILTER(WHERE i.id IS NOT NULL),'[]') AS items
     FROM prescriptions x LEFT JOIN prescription_items i ON i.prescription_id=x.id WHERE x.consultation_id=(SELECT id FROM consultations WHERE appointment_id=$1) GROUP BY x.id ORDER BY x.issued_at DESC`,[appointmentId]);
   const records=await pool.query(`SELECT id,original_filename,content_type,size_bytes,category,created_at FROM medical_records WHERE appointment_id=$1 AND visibility='PATIENT_AND_DOCTOR' ORDER BY created_at DESC`,[appointmentId]);
-  const view={id:row.id,consultationId:row.consultation_id,startsAt:row.starts_at,endsAt:row.ends_at,status:row.status,method:row.method,meetingUrl:row.meeting_url,serviceName:row.service_name,durationMinutes:row.duration_minutes,feePaise:row.fee_paise,doctorName:row.doctor_name,patientName:row.patient_name,patientEmail:row.patient_email,patientPhone:row.patient_phone,problemDescription:row.problem_description,symptoms:row.symptoms,symptomsStarted:row.symptoms_started,severity:row.severity,medicationNotes:row.medication_notes,conditionNotes:row.condition_notes,allergyNotes:row.allergy_notes,previousTreatments:row.previous_treatments,additionalNotes:row.additional_notes,...(!patient?{notes:row.notes,assessment:row.assessment,diagnosisCode:row.diagnosis_code}:{ }),patientSummary:row.patient_summary,followUpAt:row.follow_up_at,completedAt:row.completed_at,prescriptions:prescriptions.rows,records:records.rows};
+  const view={id:row.id,...(!patient?{patientId:row.patient_id}:{}),serviceId:row.service_id,consultationId:row.consultation_id,startsAt:row.starts_at,endsAt:row.ends_at,status:row.status,method:row.method,meetingUrl:row.meeting_url,serviceName:row.service_name,durationMinutes:row.duration_minutes,feePaise:row.fee_paise,doctorName:row.doctor_name,patientName:row.patient_name,patientEmail:row.patient_email,patientPhone:row.patient_phone,problemDescription:row.problem_description,symptoms:row.symptoms,symptomsStarted:row.symptoms_started,severity:row.severity,medicationNotes:row.medication_notes,conditionNotes:row.condition_notes,allergyNotes:row.allergy_notes,previousTreatments:row.previous_treatments,additionalNotes:row.additional_notes,...(!patient?{notes:row.notes,assessment:row.assessment,diagnosisCode:row.diagnosis_code}:{ }),patientSummary:row.patient_summary,followUpAt:row.follow_up_at,completedAt:row.completed_at,rescheduleRequest:row.reschedule_request_id?{id:row.reschedule_request_id,startsAt:row.proposed_starts_at,endsAt:row.proposed_ends_at}:null,prescriptions:prescriptions.rows,records:records.rows};
   return res.json({appointment:view});
 }));
 
@@ -168,6 +171,95 @@ router.post('/appointments/:id/cancel-request', requireRole('PATIENT'), asyncRou
   const doctorAccount=await pool.query(`SELECT d.user_id FROM appointments a JOIN doctors d ON d.id=a.doctor_id WHERE a.id=$1`,[appointmentId]);
   if(doctorAccount.rowCount)await pool.query(`INSERT INTO notifications(user_id,appointment_id,channel,template_key,status) VALUES($1,$2,'IN_APP','APPOINTMENT_REQUEST_CANCELLED','QUEUED')`,[doctorAccount.rows[0].user_id,appointmentId]);
   return res.json({appointment:result.rows[0]});
+}));
+
+router.post('/appointments/:id/reschedule-request', requireRole('PATIENT'), asyncRoute(async(req,res)=>{
+  const appointmentId=requiredUuid(req.params.id,'appointment id');
+  const startsAtText=req.body?.startsAt;
+  const startsAt=typeof startsAtText==='string'?new Date(startsAtText):new Date(NaN);
+  if(typeof startsAtText!=='string'||!Number.isFinite(startsAt.getTime())||startsAt.toISOString()!==startsAtText||startsAt<=new Date())throw new HttpError(400,'Choose a future available appointment time.');
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const existing=await client.query(`SELECT a.id,a.patient_id,a.doctor_id,a.service_id,a.status,a.starts_at AS current_starts_at,s.duration_minutes,d.timezone
+      FROM appointments a JOIN services s ON s.id=a.service_id JOIN doctors d ON d.id=a.doctor_id
+      WHERE a.id=$1 AND a.patient_id=$2`,[appointmentId,req.user!.patientId]);
+    if(!existing.rowCount)throw new HttpError(404,'Appointment not found.');
+    const appointment=existing.rows[0];
+    if(!['CONFIRMED','UPCOMING'].includes(appointment.status))throw new HttpError(409,'Only a confirmed future appointment can be rescheduled here.');
+    if(new Date(appointment.current_starts_at).getTime()<=Date.now())throw new HttpError(409,'An appointment that has already started cannot be rescheduled.');
+    if(new Date(appointment.current_starts_at).getTime()===startsAt.getTime())throw new HttpError(400,'Choose a time different from your current appointment.');
+    const date=localDate(startsAt,appointment.timezone);
+    const today=localDate(new Date(),appointment.timezone);
+    const maximum=new Date(`${today}T12:00:00Z`);maximum.setUTCDate(maximum.getUTCDate()+90);
+    if(date<today||date>maximum.toISOString().slice(0,10))throw new HttpError(400,'Choose a date within the next 90 days.');
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`booking:${appointment.doctor_id}:${date}`]);
+    const locked=await client.query(`SELECT status FROM appointments WHERE id=$1 AND patient_id=$2 FOR UPDATE`,[appointmentId,req.user!.patientId]);
+    if(!locked.rowCount||!['CONFIRMED','UPCOMING'].includes(locked.rows[0].status))throw new HttpError(409,'This appointment has changed. Refresh and try again.');
+    const slots=await getSlots(client,appointment.doctor_id,appointment.service_id,date,appointmentId);
+    const slot=slots.find((item)=>item.startsAt.getTime()===startsAt.getTime());
+    if(!slot)throw new HttpError(409,'That time is no longer available. Choose another time.');
+    const saved=await client.query(`INSERT INTO appointment_reschedule_requests(appointment_id,patient_id,doctor_id,proposed_starts_at,proposed_ends_at)
+      VALUES($1,$2,$3,$4,$5) RETURNING id,status,proposed_starts_at,proposed_ends_at`,[appointmentId,req.user!.patientId,appointment.doctor_id,slot.startsAt,slot.endsAt]);
+    const doctorUser=await client.query('SELECT user_id FROM doctors WHERE id=$1',[appointment.doctor_id]);
+    await client.query(`INSERT INTO notifications(user_id,appointment_id,channel,template_key,status) VALUES($1,$2,'IN_APP','APPOINTMENT_RESCHEDULE_REQUESTED','QUEUED')`,[doctorUser.rows[0].user_id,appointmentId]);
+    await client.query(`INSERT INTO audit_logs(actor_user_id,action,resource_type,resource_id,metadata) VALUES($1,'APPOINTMENT_RESCHEDULE_REQUESTED','APPOINTMENT',$2,'{}')`,[req.user!.id,appointmentId]);
+    await client.query('COMMIT');
+    return res.status(201).json({request:saved.rows[0]});
+  }catch(error){await client.query('ROLLBACK');if(error&&typeof error==='object'&&'code'in error&&error.code==='23505')throw new HttpError(409,'A reschedule request is already waiting for the practice.');throw error;}
+  finally{client.release();}
+}));
+
+router.post('/appointments/:id/reschedule-request/cancel', requireRole('PATIENT'), asyncRoute(async(req,res)=>{
+  const appointmentId=requiredUuid(req.params.id,'appointment id');
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const request=await client.query(`UPDATE appointment_reschedule_requests r SET status='CANCELLED',updated_at=now()
+      FROM appointments a WHERE r.appointment_id=$1 AND a.id=r.appointment_id AND a.patient_id=$2 AND r.status='PENDING'
+      RETURNING r.id,r.doctor_id`,[appointmentId,req.user!.patientId]);
+    if(!request.rowCount)throw new HttpError(404,'Pending reschedule request not found.');
+    const doctorUser=await client.query('SELECT user_id FROM doctors WHERE id=$1',[request.rows[0].doctor_id]);
+    await client.query(`INSERT INTO notifications(user_id,appointment_id,channel,template_key,status) VALUES($1,$2,'IN_APP','APPOINTMENT_RESCHEDULE_CANCELLED','QUEUED')`,[doctorUser.rows[0].user_id,appointmentId]);
+    await client.query(`INSERT INTO audit_logs(actor_user_id,action,resource_type,resource_id,metadata) VALUES($1,'APPOINTMENT_RESCHEDULE_CANCELLED','APPOINTMENT',$2,'{}')`,[req.user!.id,appointmentId]);
+    await client.query('COMMIT');return res.json({message:'Reschedule request cancelled.'});
+  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
+}));
+
+router.patch('/reschedule-requests/:id', requireRole('DOCTOR'), asyncRoute(async(req,res)=>{
+  const requestId=requiredUuid(req.params.id,'reschedule request id');
+  const decision=req.body?.decision;
+  if(decision!=='ACCEPTED'&&decision!=='DECLINED')throw new HttpError(400,'Choose accept or decline.');
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const found=await client.query(`SELECT r.id,r.appointment_id,r.patient_id,p.user_id AS patient_user_id,r.doctor_id,r.proposed_starts_at,r.proposed_ends_at,
+        a.service_id,a.status AS appointment_status,a.method,d.timezone,a.google_calendar_event_id
+      FROM appointment_reschedule_requests r JOIN appointments a ON a.id=r.appointment_id JOIN doctors d ON d.id=r.doctor_id JOIN patients p ON p.id=r.patient_id
+      WHERE r.id=$1 AND r.doctor_id=$2 AND r.status='PENDING'`,[requestId,req.user!.doctorId]);
+    if(!found.rowCount)throw new HttpError(404,'Pending reschedule request not found.');
+    const request=found.rows[0];
+    if(decision==='DECLINED'){
+      await client.query(`UPDATE appointment_reschedule_requests SET status='DECLINED',updated_at=now() WHERE id=$1 AND status='PENDING'`,[requestId]);
+    }else{
+      if(!['CONFIRMED','UPCOMING'].includes(request.appointment_status))throw new HttpError(409,'This visit can no longer be rescheduled.');
+      const proposedStart=new Date(request.proposed_starts_at as string);
+      const date=localDate(proposedStart,request.timezone);
+      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`booking:${request.doctor_id}:${date}`]);
+      const locked=await client.query(`SELECT status,starts_at,ends_at FROM appointments WHERE id=$1 AND doctor_id=$2 FOR UPDATE`,[request.appointment_id,req.user!.doctorId]);
+      const stillPending=await client.query(`SELECT id FROM appointment_reschedule_requests WHERE id=$1 AND status='PENDING' FOR UPDATE`,[requestId]);
+      if(!locked.rowCount||!stillPending.rowCount||!['CONFIRMED','UPCOMING'].includes(locked.rows[0].status))throw new HttpError(409,'This request has changed. Refresh and review it again.');
+      const slots=await getSlots(client,request.doctor_id,request.service_id,date,request.appointment_id,requestId);
+      const slot=slots.find((item)=>item.startsAt.getTime()===proposedStart.getTime());
+      if(!slot)throw new HttpError(409,'The requested time is no longer available. Decline it and ask the patient to choose another time.');
+      if(request.method==='GOOGLE_MEET'&&request.google_calendar_event_id)await updateAppointmentEventTime(request.doctor_id,request.google_calendar_event_id,request.timezone,slot.startsAt.toISOString(),slot.endsAt.toISOString());
+      await client.query(`UPDATE appointments SET starts_at=$1,ends_at=$2,updated_at=now() WHERE id=$3`,[slot.startsAt,slot.endsAt,request.appointment_id]);
+      await client.query(`UPDATE appointment_reschedule_requests SET status='ACCEPTED',updated_at=now() WHERE id=$1`,[requestId]);
+    }
+    await client.query(`INSERT INTO notifications(user_id,appointment_id,channel,template_key,status) VALUES($1,$2,'IN_APP',$3,'QUEUED')`,[request.patient_user_id,request.appointment_id,decision==='ACCEPTED'?'APPOINTMENT_RESCHEDULE_ACCEPTED':'APPOINTMENT_RESCHEDULE_DECLINED']);
+    await client.query(`INSERT INTO audit_logs(actor_user_id,action,resource_type,resource_id,metadata) VALUES($1,$2,'APPOINTMENT',$3,'{}')`,[req.user!.id,decision==='ACCEPTED'?'APPOINTMENT_RESCHEDULE_ACCEPTED':'APPOINTMENT_RESCHEDULE_DECLINED',request.appointment_id]);
+    await client.query('COMMIT');return res.json({message:decision==='ACCEPTED'?'Appointment time updated.':'Reschedule request declined.'});
+  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }));
 
 router.get('/notifications',asyncRoute(async(req,res)=>{
@@ -358,6 +450,65 @@ router.put('/availability', requireRole('DOCTOR'), asyncRoute(async (req, res) =
   } catch (error) { await client.query('ROLLBACK'); throw error; }
   finally { client.release(); }
   return res.json({ message: 'Availability saved.' });
+}));
+
+router.get('/availability/exceptions', requireRole('DOCTOR'), asyncRoute(async (req, res) => {
+  const result = await pool.query(`SELECT id,starts_at,ends_at,label FROM availability_exceptions
+    WHERE doctor_id=$1 AND ends_at>now() ORDER BY starts_at LIMIT 200`, [req.user!.doctorId]);
+  return res.json({ exceptions: result.rows });
+}));
+
+router.post('/availability/exceptions', requireRole('DOCTOR'), asyncRoute(async (req, res) => {
+  const { startsAt, endsAt } = req.body ?? {};
+  const label = typeof req.body?.label === 'string' ? req.body.label.trim() : '';
+  const start = typeof startsAt === 'string' ? new Date(startsAt) : new Date(NaN);
+  const end = typeof endsAt === 'string' ? new Date(endsAt) : new Date(NaN);
+  if (typeof startsAt !== 'string' || !Number.isFinite(start.getTime()) || start.toISOString() !== startsAt
+    || typeof endsAt !== 'string' || !Number.isFinite(end.getTime()) || end.toISOString() !== endsAt
+    || end <= start || start <= new Date() || end.getTime() - start.getTime() > 31 * 24 * 60 * 60 * 1000
+    || label.length > 80) throw new HttpError(400, 'Choose a future time-off period of up to 31 days and a note under 80 characters.');
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    // Booking requests lock their practice-local date. Lock adjacent UTC dates
+    // too, covering practice timezones from UTC-12 through UTC+14.
+    const lockStart = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate() - 1));
+    const lockEnd = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate() + 1));
+    for (const day = new Date(lockStart); day <= lockEnd; day.setUTCDate(day.getUTCDate() + 1)) {
+      const date = day.toISOString().slice(0, 10);
+      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`booking:${req.user!.doctorId}:${date}`]);
+    }
+    const conflict = await client.query(`SELECT id FROM appointments WHERE doctor_id=$1
+      AND starts_at<$3 AND ends_at>$2 AND status IN ('PENDING','PAYMENT_PENDING','CONFIRMED','UPCOMING','IN_PROGRESS')
+      UNION ALL SELECT id FROM appointment_reschedule_requests WHERE doctor_id=$1 AND status='PENDING'
+      AND proposed_starts_at<$3 AND proposed_ends_at>$2 LIMIT 1`,
+    [req.user!.doctorId, start.toISOString(), end.toISOString()]);
+    if (conflict.rowCount) throw new HttpError(409, 'This time overlaps an appointment. Review the schedule before blocking it.');
+    const saved = await client.query(`INSERT INTO availability_exceptions(doctor_id,starts_at,ends_at,label,unavailable)
+      VALUES($1,$2,$3,$4,true) RETURNING id,starts_at,ends_at,label`, [req.user!.doctorId, start.toISOString(), end.toISOString(), label || null]);
+    await client.query(`INSERT INTO audit_logs(actor_user_id,action,resource_type,resource_id,metadata)
+      VALUES($1,'AVAILABILITY_TIME_BLOCKED','AVAILABILITY_EXCEPTION',$2,jsonb_build_object('label',$3::text))`, [req.user!.id, saved.rows[0].id, label || null]);
+    await client.query('COMMIT');
+    return res.status(201).json({ exception: saved.rows[0] });
+  } catch (error) { await client.query('ROLLBACK'); throw error; }
+  finally { client.release(); }
+}));
+
+router.delete('/availability/exceptions/:id', requireRole('DOCTOR'), asyncRoute(async (req, res) => {
+  const id = requiredUuid(req.params.id, 'time-off period id');
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const removed = await client.query(`DELETE FROM availability_exceptions WHERE id=$1 AND doctor_id=$2
+      RETURNING id`, [id, req.user!.doctorId]);
+    if (!removed.rowCount) throw new HttpError(404, 'Time-off period not found.');
+    await client.query(`INSERT INTO audit_logs(actor_user_id,action,resource_type,resource_id,metadata)
+      VALUES($1,'AVAILABILITY_TIME_UNBLOCKED','AVAILABILITY_EXCEPTION',$2,'{}')`, [req.user!.id, id]);
+    await client.query('COMMIT');
+    return res.json({ message: 'Time off removed.' });
+  } catch (error) { await client.query('ROLLBACK'); throw error; }
+  finally { client.release(); }
 }));
 
 router.get('/profile', asyncRoute(async (req, res) => {

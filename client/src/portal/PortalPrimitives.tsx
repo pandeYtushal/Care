@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ArrowUpRight, ClipboardList, FileText, RefreshCw } from "lucide-react";
+import { ArrowUpRight, ClipboardList, FileText, RefreshCw, Trash2 } from "lucide-react";
 import { apiBaseUrl } from "../lib/api";
 import { dateTime } from "./format";
 
@@ -55,7 +55,7 @@ export function Status({
     );
   return <>{children}</>;
 }
-export function RecordList({ records, variant = "default" }: { records: Record<string, unknown>[]; variant?: "default" | "reports" }) {
+export function RecordList({ records, variant = "default", onDelete, deletingId = "" }: { records: Record<string, unknown>[]; variant?: "default" | "reports"; onDelete?: (id: string) => void; deletingId?: string }) {
   if (!records.length)
     return (
       <Empty
@@ -77,14 +77,19 @@ export function RecordList({ records, variant = "default" }: { records: Record<s
                 </div>
                 <p>{String(r.content_type)} · {Math.ceil(Number(r.size_bytes) / 1024)} KB · Added {dateTime(String(r.created_at))}</p>
               </div>
-              <a
-                className="report-view-link"
-                href={`${apiBaseUrl}/api/portal/records/${encodeURIComponent(String(r.id))}/download?view=1`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                View record <ArrowUpRight size={15} aria-hidden="true" />
-              </a>
+              <div className="report-record-actions">
+                <a
+                  className="report-view-link"
+                  href={`${apiBaseUrl}/api/portal/records/${encodeURIComponent(String(r.id))}/download?view=1`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View record <ArrowUpRight size={15} aria-hidden="true" />
+                </a>
+                {onDelete && <button type="button" className="report-delete-button" disabled={deletingId === String(r.id)} onClick={() => onDelete(String(r.id))} aria-label={`Delete ${String(r.original_filename)}`}>
+                  <Trash2 size={15} aria-hidden="true" />{deletingId === String(r.id) ? "Deleting…" : "Delete"}
+                </button>}
+              </div>
             </>
           ) : (
             <>
@@ -125,7 +130,7 @@ export function PrescriptionList({
       />
     );
   return (
-    <div className="card-list">
+    <div className={`card-list${role === "PATIENT" ? " patient-prescription-list" : " doctor-prescription-list"}`}>
       {prescriptions.map((r) => {
         const clean = (value: unknown) => {
           const text = String(value ?? "").trim();
@@ -141,8 +146,11 @@ export function PrescriptionList({
           <article className="card timeline-content" key={String(r.id)}>
             <ClipboardList size={19} />
             <div>
-              <strong>{prescriber} · {dateTime(String(r.issued_at))}</strong>
-              {items.length > 0 ? <ul>{items.map((item, index) => <li key={index}>{item}</li>)}</ul> : <p className="prescription-detail-unavailable">Prescription details were not provided.</p>}
+              <div className="prescription-entry-heading">
+                <strong>{prescriber}</strong>
+                <time dateTime={String(r.issued_at)}>{dateTime(String(r.issued_at))}</time>
+              </div>
+              {items.length > 0 ? <ul>{items.map((item, index) => <li key={index}>{item}</li>)}</ul> : <p className="prescription-detail-unavailable">Medicine details unavailable</p>}
               {instructions && <p>{instructions}</p>}
             </div>
           </article>

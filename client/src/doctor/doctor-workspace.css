@@ -608,47 +608,217 @@
   .doctor-workspace *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
 
-/* Weekly availability editor: grouped schedule cards replace the repeated full-width form rows. */
-.doctor-workspace .availability-workspace { margin-top: 26px; }
-.doctor-workspace .availability-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
-.doctor-workspace .availability-toolbar h2 { margin: 0; color: #2d4437; font-size: 19px; font-weight: 650; letter-spacing: -.025em; }
-.doctor-workspace .availability-toolbar p { margin: 5px 0 0; color: #758178; font-size: 12px; }
-.doctor-workspace .availability-add { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 43px; }
-.doctor-workspace .availability-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 12px; margin: 0; }
-.doctor-workspace .availability-card-grid > .availability-row { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 15px; padding: 17px; border: 1px solid #e0e5db; border-radius: 15px; background: #fffefa; box-shadow: 0 4px 13px rgb(38 57 44 / 3%); }
-.doctor-workspace .availability-row-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; }
-.doctor-workspace .availability-row-heading > label,
-.doctor-workspace .availability-time-range > label,
-.doctor-workspace .availability-visit-settings > label { display: grid; min-width: 0; gap: 7px; color: #647369; font-size: 10px; font-weight: 650; }
-.doctor-workspace .availability-row-heading > label { flex: 1 1 auto; max-width: 220px; }
-.doctor-workspace .availability-row :is(input, select) { width: 100%; min-width: 0; min-height: 44px; border-color: #dfe5dc; border-radius: 9px; background: #fff; color: #304638; font-size: 13px; }
-.doctor-workspace .availability-time-range { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 9px; }
-.doctor-workspace .availability-range-separator { padding-bottom: 13px; color: #98a198; font-size: 11px; }
-.doctor-workspace .availability-visit-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding-top: 13px; border-top: 1px solid #edf0e9; }
-.doctor-workspace .availability-remove { display: inline-flex; min-height: 40px; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; padding: 0 9px; border: 1px solid transparent; border-radius: 9px; color: #92594a; background: transparent; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
-.doctor-workspace .availability-remove:hover { border-color: #eadbd5; background: #fbf5f2; }
-.doctor-workspace .availability-remove:focus-visible { outline: 2px solid #3e7058; outline-offset: 2px; }
-.doctor-workspace .availability-footer { display: flex; align-items: center; gap: 9px; margin-top: 17px; padding-top: 15px; border-top: 1px solid #e1e5dc; }
+/* Availability uses quiet, expandable day rows so the whole week is scannable. */
+.doctor-workspace .doctor-availability-page { width: min(100%, 1040px); margin-inline: auto; }
+.doctor-workspace .doctor-availability-page > .page-header { margin-bottom: 29px; }
+.doctor-workspace .doctor-availability-page > .page-header .eyebrow { display: block; margin: 0 0 8px; color: #5c8068; font-size: 9px; font-weight: 750; letter-spacing: .16em; line-height: 1.3; }
+.doctor-workspace .doctor-availability-page > .page-header h1 { font-size: clamp(34px, 3.8vw, 45px); letter-spacing: -.045em; line-height: 1.04; }
+.doctor-workspace .doctor-availability-page > .page-header p { max-width: 43ch; margin-top: 9px; color: #68776f; font-size: 14px; line-height: 1.55; }
+.doctor-workspace .doctor-reschedule-review { display: grid; gap: 10px; margin: 16px 0; padding: 16px 18px; border: 1px solid #dce5db; border-radius: 12px; background: #f4f7f1; }
+.doctor-workspace .doctor-reschedule-review > div:first-child > span { color: #5f8067; font-size: 9px; font-weight: 750; letter-spacing: .13em; }
+.doctor-workspace .doctor-reschedule-review h2 { margin: 4px 0; color: #294536; font-size: 16px; font-weight: 650; }
+.doctor-workspace .doctor-reschedule-review p { margin: 0; color: #6b796f; font-size: 12px; }
+.doctor-workspace .doctor-reschedule-review > div:last-child { display: flex; flex-wrap: wrap; gap: 8px; }
+.doctor-workspace .doctor-reschedule-review > :is(.form-error, .form-notice) { margin: 0; }
+.doctor-workspace .availability-workspace { margin-top: 28px; }
+.doctor-workspace .availability-summary-bar { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 13px 0; border-top: 1px solid #e2e5dc; border-bottom: 1px solid #e2e5dc; }
+.doctor-workspace .availability-timezone { display: flex; align-items: center; gap: 8px; min-width: 0; color: #365a45; font-size: 12px; }
+.doctor-workspace .availability-timezone span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doctor-workspace .availability-timezone small { padding-left: 8px; border-left: 1px solid #dce2d8; color: #879188; font-size: 10px; }
+.doctor-workspace .availability-summary-stats { display: flex; align-items: baseline; gap: 5px; color: #758078; font-size: 11px; white-space: nowrap; }
+.doctor-workspace .availability-summary-stats strong { margin-left: 8px; color: #315a43; font-size: 15px; font-variant-numeric: tabular-nums; }
+.doctor-workspace .availability-summary-stats strong:first-child { margin-left: 0; }
+.doctor-workspace .availability-summary-stats i { width: 1px; height: 14px; margin: 0 5px; background: #dce2d8; }
+.doctor-workspace .availability-days { border-bottom: 1px solid #e2e5dc; }
+.doctor-workspace .availability-day { border-top: 1px solid #e7e9e2; }
+.doctor-workspace .availability-day:first-child { border-top: 0; }
+.doctor-workspace .availability-day-summary { display: grid; grid-template-columns: minmax(0, 1fr) 42px; align-items: center; gap: 12px; min-height: 68px; padding: 7px 4px; }
+.doctor-workspace .availability-day-toggle { display: grid; min-width: 0; grid-template-columns: 148px minmax(0, 1fr) 20px; align-items: center; gap: 12px; padding: 8px 10px; border: 0; border-radius: 9px; color: #263d31; background: transparent; text-align: left; cursor: pointer; }
+.doctor-workspace .availability-day-toggle:hover { background: #f2f4ef; }
+.doctor-workspace .availability-day-toggle:focus-visible,
+.doctor-workspace .availability-switch:focus-visible,
+.doctor-workspace .availability-copy-panel summary:focus-visible,
+.doctor-workspace .availability-add-interval:focus-visible { outline: 2px solid #4c795d; outline-offset: 2px; }
+.doctor-workspace .availability-day-name { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 650; }
+.doctor-workspace .availability-day-short { display: none; }
+.doctor-workspace .availability-day-hours { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 6px; }
+.doctor-workspace .availability-hours-chip { display: inline-flex; align-items: baseline; gap: 7px; padding: 5px 9px; border: 1px solid #e0e6dd; border-radius: 999px; color: #355944; background: #fbfcf8; font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.doctor-workspace .availability-hours-chip small { color: #818b81; font-size: 9px; }
+.doctor-workspace .availability-no-hours,
+.doctor-workspace .availability-day-off { color: #929a91; font-size: 12px; }
+.doctor-workspace .availability-day-off { font-style: italic; }
+.doctor-workspace .availability-day-chevron { justify-self: center; color: #89938a; transition: transform 150ms ease; }
+.doctor-workspace .availability-day.is-expanded .availability-day-chevron { transform: rotate(180deg); }
+.doctor-workspace .availability-switch { position: relative; box-sizing: border-box; display: block; width: 40px; min-width: 40px; max-width: 40px; height: 24px; min-height: 24px !important; max-height: 24px; align-self: center; justify-self: center; padding: 0; border: 0; border-radius: 999px; background: #dfe3dc; line-height: 1; cursor: pointer; transition: background-color 150ms ease; }
+.doctor-workspace .availability-switch > span { position: absolute; top: 3px; left: 3px; display: block; box-sizing: border-box; width: 18px; min-width: 18px; height: 18px; min-height: 18px; margin: 0; padding: 0; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(31 48 37 / 20%); transition: transform 150ms ease; }
+.doctor-workspace .availability-switch.is-on { background: #467356; }
+.doctor-workspace .availability-switch.is-on > span { transform: translateX(16px); }
+.doctor-workspace .availability-day-editor { margin: 0 0 14px 160px; padding: 12px 14px 13px; border-left: 2px solid #8bab91; background: #f7f8f4; }
+.doctor-workspace .availability-interval { display: grid; grid-template-columns: minmax(230px, 1.45fr) minmax(118px, .72fr) minmax(118px, .72fr) auto; align-items: end; gap: 12px; padding: 10px 0; border-bottom: 1px solid #e6e9e2; }
+.doctor-workspace .availability-interval-times { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 9px; }
+.doctor-workspace .availability-interval label { display: grid; min-width: 0; gap: 6px; color: #68776c; font-size: 10px; font-weight: 650; }
+.doctor-workspace .availability-interval :is(input, select) { width: 100%; min-width: 0; min-height: 40px; border: 1px solid #d9e0d6; border-radius: 8px; background: #fff; color: #304638; font-size: 12px; }
+.doctor-workspace .availability-interval-separator { padding-bottom: 12px; color: #8c958c; font-size: 11px; }
+.doctor-workspace .availability-interval-remove { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: 6px; padding: 0 7px; border: 0; border-radius: 7px; color: #8b5b4e; background: transparent; font: inherit; font-size: 11px; cursor: pointer; }
+.doctor-workspace .availability-interval-remove:hover { background: #f3eae6; }
+.doctor-workspace .availability-interval.has-error :is(input, select) { border-color: #bd7568; }
+.doctor-workspace .availability-inline-error { grid-column: 1 / -1; margin: -3px 0 0; color: #a14f43; font-size: 11px; }
+.doctor-workspace .availability-day-empty-note { margin: 0 0 8px; color: #758078; font-size: 11px; }
+.doctor-workspace .availability-add-interval { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 8px; border: 0; border-radius: 7px; color: #3d6a4d; background: transparent; font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; }
+.doctor-workspace .availability-add-interval:hover { background: #eaf0e8; }
+.doctor-workspace .availability-time-off { margin-top: 28px; padding: 22px 0 4px; border-top: 1px solid #e2e5dc; }
+.doctor-workspace .availability-time-off-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 15px; }
+.doctor-workspace .availability-time-off-heading > div > span { color: #708071; font-size: 9px; font-weight: 700; letter-spacing: .13em; }
+.doctor-workspace .availability-time-off-heading h2 { margin: 5px 0 0; color: #2f493b; font-size: 18px; font-weight: 650; letter-spacing: -.025em; }
+.doctor-workspace .availability-time-off-heading p { max-width: 39ch; margin: 0; color: #778279; font-size: 11px; line-height: 1.5; }
+.doctor-workspace .availability-time-off-form { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(150px, .8fr) auto; align-items: end; gap: 10px; }
+.doctor-workspace .availability-time-off-form label { display: grid; min-width: 0; gap: 6px; color: #68776c; font-size: 10px; font-weight: 650; }
+.doctor-workspace .availability-time-off-form label > span small { margin-left: 4px; color: #929b92; font-size: 9px; font-weight: 400; }
+.doctor-workspace .availability-time-off-form input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 40px; padding: 0 9px; border: 1px solid #d9e0d6; border-radius: 8px; color: #304638; background: #fff; font-size: 11px; }
+.doctor-workspace .availability-time-off-form input:focus-visible { outline: 2px solid #4c795d; outline-offset: 1px; }
+.doctor-workspace .availability-time-off-form > .btn { min-height: 40px; white-space: nowrap; }
+.doctor-workspace .availability-time-off-feedback { margin: 9px 0 0; font-size: 11px; }
+.doctor-workspace .availability-time-off-empty { margin: 12px 0 0; color: #879188; font-size: 11px; }
+.doctor-workspace .availability-time-off-list { margin: 13px 0 0; padding: 0; border-top: 1px solid #e8ebe4; list-style: none; }
+.doctor-workspace .availability-time-off-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; padding: 9px 2px; border-bottom: 1px solid #e8ebe4; }
+.doctor-workspace .availability-time-off-list li > div { display: flex; min-width: 0; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.doctor-workspace .availability-time-off-list strong { color: #3d5948; font-size: 11px; font-variant-numeric: tabular-nums; }
+.doctor-workspace .availability-time-off-list li > div > span { color: #7a857b; font-size: 11px; }
+.doctor-workspace .availability-time-off-list .availability-interval-remove { min-height: 34px; flex: 0 0 auto; }
+.doctor-workspace .availability-time-off-list button:disabled { cursor: wait; opacity: .6; }
+.doctor-workspace .availability-copy-panel { margin-top: 17px; border-top: 1px solid #e2e5dc; border-bottom: 1px solid #e2e5dc; }
+.doctor-workspace .availability-copy-panel summary { display: flex; min-height: 48px; align-items: center; gap: 9px; color: #3b6449; font-size: 12px; font-weight: 650; cursor: pointer; list-style: none; }
+.doctor-workspace .availability-copy-panel summary::-webkit-details-marker { display: none; }
+.doctor-workspace .availability-copy-panel summary svg:last-child { margin-left: auto; color: #849087; transition: transform 150ms ease; }
+.doctor-workspace .availability-copy-panel[open] summary svg:last-child { transform: rotate(180deg); }
+.doctor-workspace .availability-copy-content { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; padding: 2px 0 16px; }
+.doctor-workspace .availability-copy-source { display: grid; min-width: 180px; gap: 6px; color: #68776c; font-size: 10px; font-weight: 650; }
+.doctor-workspace .availability-copy-source select { min-height: 40px; border: 1px solid #d9e0d6; border-radius: 8px; background: #fff; color: #304638; }
+.doctor-workspace .availability-copy-targets { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; border: 0; }
+.doctor-workspace .availability-copy-targets legend { margin-bottom: 6px; color: #68776c; font-size: 10px; font-weight: 650; }
+.doctor-workspace .availability-copy-targets label { display: inline-flex; min-height: 34px; align-items: center; gap: 6px; padding: 0 9px; border: 1px solid #e0e5dc; border-radius: 7px; color: #53655a; background: #fff; font-size: 11px; cursor: pointer; }
+.doctor-workspace .availability-footer { display: flex; align-items: center; gap: 9px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #e2e5dc; }
 .doctor-workspace .availability-feedback { min-width: 0; flex: 1 1 auto; }
-.doctor-workspace .availability-feedback :is(.form-error, .form-notice) { margin: 0; }
-.doctor-workspace .availability-footer > .btn { min-height: 43px; }
-.doctor-workspace .availability-card-grid > .empty-state { grid-column: 1 / -1; padding: 34px 18px; border: 1px dashed #d9e0d5; border-radius: 14px; background: #f8f9f5; }
-@media (max-width: 900px) {
-  .doctor-workspace .availability-card-grid { grid-template-columns: minmax(0, 1fr); }
-  .doctor-workspace .availability-card-grid > .availability-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: start; }
-  .doctor-workspace .availability-row-heading { grid-row: span 2; flex-direction: column; align-items: stretch; }
-  .doctor-workspace .availability-row-heading > label { max-width: none; }
-  .doctor-workspace .availability-remove { align-self: flex-start; }
+.doctor-workspace .availability-feedback :is(.form-error, .form-notice, .availability-unsaved) { margin: 0; }
+.doctor-workspace .availability-unsaved { color: #7a6c43; font-size: 11px; }
+.doctor-workspace .availability-footer > .btn { min-height: 42px; }
+.doctor-workspace .availability-interval :is(input, select):focus-visible,
+.doctor-workspace .availability-copy-source select:focus-visible { outline: 2px solid #4c795d; outline-offset: 1px; }
+@media (max-width: 760px) {
+  .doctor-workspace .availability-day-toggle { grid-template-columns: 100px minmax(0, 1fr) 18px; gap: 8px; }
+  .doctor-workspace .availability-day-editor { margin-left: 0; }
+  .doctor-workspace .availability-interval { grid-template-columns: minmax(0, 1fr) minmax(118px, .7fr) minmax(118px, .7fr); }
+  .doctor-workspace .availability-interval-remove { grid-column: 1 / -1; justify-self: start; min-height: 32px; }
+  .doctor-workspace .availability-time-off-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .doctor-workspace .availability-time-off-note { grid-column: 1; }
+  .doctor-workspace .availability-time-off-form > .btn { align-self: end; }
 }
-@media (max-width: 600px) {
-  .doctor-workspace .availability-toolbar { align-items: flex-start; }
-  .doctor-workspace .availability-add { min-width: 110px; }
-  .doctor-workspace .availability-card-grid > .availability-row { grid-template-columns: minmax(0, 1fr); gap: 13px; padding: 14px; }
-  .doctor-workspace .availability-row-heading { grid-row: auto; flex-direction: row; align-items: end; }
-  .doctor-workspace .availability-row-heading > label { max-width: 220px; }
-  .doctor-workspace .availability-footer { display: grid; grid-template-columns: 1fr 1fr; }
+@media (max-width: 520px) {
+  .doctor-workspace .doctor-availability-page > .page-header { margin-bottom: 24px; }
+  .doctor-workspace .doctor-availability-page > .page-header .eyebrow { margin-bottom: 7px; font-size: 9px; }
+  .doctor-workspace .doctor-availability-page > .page-header h1 { font-size: 35px; line-height: 1.02; }
+  .doctor-workspace .doctor-availability-page > .page-header p { max-width: 34ch; margin-top: 8px; font-size: 13px; line-height: 1.5; }
+  .doctor-workspace .availability-workspace { margin-top: 20px; }
+  .doctor-workspace .availability-summary-bar { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .doctor-workspace .availability-day-summary { grid-template-columns: minmax(0, 1fr) 40px; gap: 8px; min-height: 56px; padding: 5px 2px; }
+  .doctor-workspace .availability-day-toggle { grid-template-columns: 32px minmax(0, 1fr) 18px; gap: 7px; padding: 6px 5px; }
+  .doctor-workspace .availability-day-name { gap: 7px; font-size: 12px; }
+  .doctor-workspace .availability-day-short { display: inline; width: auto; color: #718075; font-size: 11px; font-weight: 650; }
+  .doctor-workspace .availability-day-name > span:last-child { display: none; }
+  .doctor-workspace .availability-day-hours { grid-column: 2; grid-row: 1; }
+  .doctor-workspace .availability-day-chevron { grid-column: 3; grid-row: 1; }
+  .doctor-workspace .availability-hours-chip { gap: 4px; padding: 4px 7px; font-size: 10px; }
+  .doctor-workspace .availability-hours-chip small { font-size: 9px; }
+  .doctor-workspace .availability-day-editor { padding: 9px 10px; }
+  .doctor-workspace .availability-interval { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .doctor-workspace .availability-interval-times { grid-column: 1 / -1; }
+  .doctor-workspace .availability-interval-remove { grid-column: 1 / -1; }
+  .doctor-workspace .availability-copy-content { align-items: stretch; flex-direction: column; gap: 12px; }
+  .doctor-workspace .availability-copy-source { min-width: 0; }
+  .doctor-workspace .availability-copy-content > .btn { width: 100%; }
+  .doctor-workspace .availability-time-off { margin-top: 23px; padding-top: 19px; }
+  .doctor-workspace .availability-time-off-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .doctor-workspace .availability-time-off-heading h2 { font-size: 17px; }
+  .doctor-workspace .availability-time-off-form { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .doctor-workspace .availability-time-off-note { grid-column: auto; }
+  .doctor-workspace .availability-time-off-form > .btn { width: 100%; }
+  .doctor-workspace .availability-time-off-list li { align-items: flex-start; }
+  .doctor-workspace .availability-time-off-list li > div { flex-direction: column; align-items: flex-start; gap: 3px; }
+  .doctor-workspace .availability-footer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .doctor-workspace .availability-feedback { grid-column: 1 / -1; }
   .doctor-workspace .availability-footer > .btn { width: 100%; }
+}
+
+/* Keep the patient directory from becoming a card inside another card on
+   narrow screens; the toolbar and records read as one simple list instead. */
+@media (max-width: 640px) {
+  .doctor-workspace .doctor-patient-directory {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .doctor-workspace .doctor-patient-toolbar {
+    gap: 10px;
+    padding: 0 0 14px;
+    border: 0;
+  }
+  .doctor-workspace .doctor-patient-search {
+    min-height: 46px;
+    padding-inline: 13px;
+    border-color: #d9ded4;
+    border-radius: 11px;
+    background: #fffefa;
+  }
+  .doctor-workspace .doctor-patient-toolbar .doctor-patient-search input {
+    min-height: 42px;
+    padding-inline: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .doctor-workspace .doctor-patient-sort { gap: 6px; }
+  .doctor-workspace .doctor-patient-sort select {
+    min-height: 44px;
+    border-radius: 11px;
+    background: #fffefa;
+  }
+  .doctor-workspace .doctor-patient-cards {
+    gap: 0;
+    padding: 0;
+  }
+  .doctor-workspace .doctor-patient-card {
+    padding: 15px 12px 14px;
+    border: 0;
+    border-top: 1px solid #dfe3da;
+    border-radius: 0;
+    background: transparent;
+  }
+  .doctor-workspace .doctor-patient-card:last-child { border-bottom: 1px solid #dfe3da; }
+  .doctor-workspace .doctor-patient-card-head { align-items: center; gap: 8px; }
+  .doctor-workspace .doctor-patient-card-head > div { flex-basis: 0; }
+  .doctor-workspace .doctor-patient-card-head h2 { font-size: 16px; }
+  .doctor-workspace .doctor-patient-card-head > .btn {
+    min-height: 38px;
+    flex: 0 0 auto;
+    padding-inline: 12px;
+    border-radius: 10px;
+    font-size: 11px;
+  }
+  .doctor-workspace .doctor-patient-card dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 14px;
+    margin-top: 15px;
+  }
+  .doctor-workspace .doctor-patient-card dl .doctor-patient-email { grid-column: 1 / -1; }
+  .doctor-workspace .doctor-patient-card dd { overflow-wrap: normal; word-break: normal; }
+  .doctor-workspace .doctor-patient-pagination {
+    padding: 13px 0 0;
+    border-top: 0;
+  }
+  .doctor-workspace .doctor-patient-pagination .btn { min-height: 40px; }
 }
 
 /* Keep doctor pages focused on their real titles and prevent actions from
@@ -1070,6 +1240,113 @@
 .doctor-workspace .doctor-appointment-files .patient-detail-section-heading > div > span { display: block; color: #758379; font-size: 9px; font-weight: 700; letter-spacing: .13em; line-height: 1.4; }
 .doctor-workspace .doctor-consultation-page-heading h1 { margin: 4px 0 5px; color: #173c31; font-family: var(--font-display); font-size: clamp(31px, 3.4vw, 42px); font-weight: 500; letter-spacing: -.035em; line-height: 1.12; overflow-wrap: anywhere; }
 .doctor-workspace .doctor-consultation-page-heading p { margin: 0; color: #68786e; font-size: 13px; line-height: 1.55; }
+.doctor-workspace .doctor-patient-record-link { display: inline-flex; min-height: 36px; align-items: center; gap: 7px; margin-top: 10px; padding: 0 12px; border: 1px solid #dbe4d9; border-radius: 999px; color: #3d694e; background: #f5f8f2; font-size: 11px; font-weight: 650; text-decoration: none; }
+.doctor-workspace .doctor-patient-record-link:hover { border-color: #b9cbb9; background: #edf3eb; }
+.doctor-workspace .doctor-request-decision { display: flex; align-items: center; justify-content: space-between; gap: 22px; margin-top: 12px; padding: 20px 22px; border-color: #dfe7dc; border-radius: 15px; background: #f8faf5; box-shadow: none; }
+.doctor-workspace .doctor-request-decision > div:first-child > span { color: #738478; font-size: 9px; font-weight: 700; letter-spacing: .13em; }
+.doctor-workspace .doctor-request-decision h2 { margin: 4px 0 0; color: #2c4436; font-size: 18px; }
+.doctor-workspace .doctor-request-decision p { margin: 5px 0 0; color: #718076; font-size: 11px; line-height: 1.5; }
+.doctor-workspace .doctor-request-decision-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 8px; }
+.doctor-workspace .doctor-request-decision-actions .btn { min-height: 43px; padding-inline: 15px; }
+.doctor-workspace .doctor-request-closed { margin-top: 12px; padding: 16px 0; border-top: 1px solid #e1e6de; border-bottom: 1px solid #e1e6de; }
+.doctor-workspace .doctor-request-closed strong { color: #4e6255; font-size: 13px; }
+.doctor-workspace .doctor-request-closed p { margin: 4px 0 0; color: #79847b; font-size: 11px; line-height: 1.5; }
+
+/* Prescription history is a compact record list, not a stack of oversized
+   cards. Keep the patient and issue date clearly separated in each row. */
+.doctor-workspace .doctor-prescriptions-page .prescriptions-workspace {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.doctor-workspace .doctor-prescriptions-page .doctor-prescription-list {
+  display: grid;
+  gap: 0;
+  padding: 0;
+}
+.doctor-workspace .doctor-prescriptions-page .doctor-prescription-list > article {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 17px 4px;
+  border: 0;
+  border-bottom: 1px solid #dfe4db;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.doctor-workspace .doctor-prescriptions-page .doctor-prescription-list > article:first-child { border-top: 1px solid #dfe4db; }
+.doctor-workspace .doctor-prescriptions-page .doctor-prescription-list > article > svg {
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 8px;
+  border-radius: 10px;
+  color: #477256;
+  background: #eaf0e8;
+}
+.doctor-workspace .doctor-prescriptions-page .doctor-prescription-list > article > div { min-width: 0; }
+.doctor-workspace .doctor-prescriptions-page .prescription-entry-heading {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+.doctor-workspace .doctor-prescriptions-page .prescription-entry-heading strong {
+  color: #263b30;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.doctor-workspace .doctor-prescriptions-page .prescription-entry-heading time {
+  flex: 0 0 auto;
+  color: #718076;
+  font-size: 11px;
+  text-align: right;
+  white-space: nowrap;
+}
+.doctor-workspace .doctor-prescriptions-page .doctor-prescription-list p {
+  margin: 4px 0 0;
+  color: #758178;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.doctor-workspace .doctor-prescriptions-page .doctor-prescription-list ul { margin: 7px 0 0; }
+@media (max-width: 560px) {
+  .doctor-workspace .doctor-prescriptions-page .doctor-prescription-list > article { grid-template-columns: 32px minmax(0, 1fr); gap: 10px; padding: 14px 0; }
+  .doctor-workspace .doctor-prescriptions-page .doctor-prescription-list > article > svg { width: 31px; height: 31px; padding: 7px; }
+  .doctor-workspace .doctor-prescriptions-page .prescription-entry-heading { align-items: flex-start; flex-direction: column; gap: 2px; }
+  .doctor-workspace .doctor-prescriptions-page .prescription-entry-heading time { text-align: left; white-space: normal; }
+}
+
+/* The search label is the single visual control; reset the generic field
+   treatment here so the input never draws a second border inside it. */
+.doctor-workspace .portal-content .doctor-patient-toolbar .doctor-patient-search > input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  color: #2c4034;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  font-size: 12px;
+}
+.doctor-workspace .portal-content .doctor-patient-toolbar .doctor-patient-search > input:focus-visible {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+}
 .doctor-workspace .doctor-appointment-workflow > .doctor-visit-summary { margin-top: 0; padding: 21px; border-radius: 16px; background: linear-gradient(120deg, #f8faf5, #fffefa 78%); }
 .doctor-workspace .doctor-appointment-workflow .appointment-detail-grid { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 18px; }
 .doctor-workspace .doctor-appointment-workflow .appointment-detail-grid > div { min-width: 0; }
@@ -1161,6 +1438,10 @@
   .doctor-workspace .doctor-appointment-workflow .doctor-prescription-form > button[type="submit"] { width: 100%; justify-content: center; }
   .doctor-workspace .doctor-appointment-workflow .doctor-prescription-form > .medicine-row { grid-template-columns: minmax(0, 1fr); padding: 13px; }
   .doctor-workspace .doctor-appointment-workflow .doctor-prescription-form > .medicine-row label { grid-column: 1; }
+  .doctor-workspace .doctor-request-decision { align-items: stretch; flex-direction: column; gap: 14px; padding: 16px; }
+  .doctor-workspace .doctor-request-decision-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .doctor-workspace .doctor-request-decision-actions .btn { justify-content: center; }
+  .doctor-workspace .doctor-request-closed { padding: 14px 0; }
   .doctor-workspace .doctor-appointment-workflow .prescription-section-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
 }
 

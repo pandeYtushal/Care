@@ -73,6 +73,13 @@ export async function createAppointmentEvent(doctorId:string,appointmentId:strin
   if(data.method==='GOOGLE_MEET'&&!meetingUrl)throw new HttpError(503,'Google Calendar created an event but did not return a Meet link. The request remains pending; retry to sync it.');
   return {eventId:result.id,meetingUrl};
 }
+export async function updateAppointmentEventTime(doctorId:string,eventId:string,timezone:string,startsAt:string,endsAt:string){
+  const response=await googleFetch(doctorId,`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}?sendUpdates=all`,{
+    method:'PATCH',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({start:{dateTime:new Date(startsAt).toISOString(),timeZone:timezone},end:{dateTime:new Date(endsAt).toISOString(),timeZone:timezone}}),
+  });
+  if(!response.ok)throw new HttpError(503,'Google Calendar could not update the visit time. The reschedule was not applied; retry after checking Calendar access.');
+}
 export async function revokeCalendarToken(doctorId:string){
   const result=await pool.query('SELECT refresh_token_ciphertext FROM doctor_google_calendar_tokens WHERE doctor_id=$1',[doctorId]);
   if(result.rowCount){const token=unseal(result.rows[0].refresh_token_ciphertext);await externalFetch('https://oauth2.googleapis.com/revoke',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({token})}).catch(()=>undefined);}

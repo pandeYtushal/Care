@@ -1,8 +1,8 @@
-export function dateTime(value: string): string {
+export function dateTime(value: string, timeZone?: string): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? "Time unavailable"
-    : new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
+    : new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short", ...(timeZone ? { timeZone } : {}) }).format(date);
 }
 
 export function safeGoogleMeetUrl(value: unknown): string | null {

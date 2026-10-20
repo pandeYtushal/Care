@@ -3547,3 +3547,21 @@ textarea { font-family: var(--font-ui); }
     padding-bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px));
   }
 }
+/* Keep keyboard users from tabbing through the full navigation on every page. */
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 0.75rem;
+  left: 0.75rem;
+  transform: translateY(-160%);
+  border-radius: 999px;
+  background: #24483b;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  font: 600 0.875rem/1.2 Figtree, sans-serif;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}

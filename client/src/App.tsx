@@ -33,7 +33,7 @@ const StaticPage = lazy(() => import('./pages/StaticPage'));
 
 function RouteLoading() {
   return (
-    <main className="grid min-h-dvh place-items-center bg-canvas px-5 text-ink" aria-busy="true">
+    <main id="main-content" tabIndex={-1} className="grid min-h-dvh place-items-center bg-canvas px-5 text-ink" aria-busy="true">
       <div className="flex items-center gap-3 rounded-xl border border-border bg-surface px-5 py-4 shadow-sm" role="status">
         <LoaderCircle className="animate-spin text-brand motion-reduce:animate-none" size={20} aria-hidden="true" />
         <span className="text-sm font-medium">Opening your care space…</span>
@@ -56,7 +56,7 @@ class AppErrorBoundary extends Component<
   render() {
     if (this.state.failed) {
       return (
-        <main className="grid min-h-dvh place-items-center bg-canvas px-5 py-12 text-center text-ink">
+        <main id="main-content" tabIndex={-1} className="grid min-h-dvh place-items-center bg-canvas px-5 py-12 text-center text-ink">
           <section className="w-full max-w-lg rounded-2xl border border-border bg-surface p-7 shadow-sm sm:p-10">
             <span className="eyebrow">PAGE ERROR</span>
             <h1 className="mt-2 text-3xl">We couldn’t load this page</h1>
@@ -90,7 +90,7 @@ class AppErrorBoundary extends Component<
 
 function NotFound() {
   return (
-    <main className="grid min-h-dvh place-items-center bg-canvas px-5 py-12 text-center text-ink">
+    <main id="main-content" tabIndex={-1} className="grid min-h-dvh place-items-center bg-canvas px-5 py-12 text-center text-ink">
       <section className="w-full max-w-lg rounded-2xl border border-border bg-surface p-7 shadow-sm sm:p-10">
         <span className="eyebrow">NOT FOUND</span>
         <h1 className="mt-2 text-3xl">That page isn’t here</h1>

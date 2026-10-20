@@ -322,7 +322,7 @@ export default function BookingPage() {
     setAttachment(null);
     setAttachmentError("");
   }
-  const steps = ["Consultation", "Date & time", "Your concern", "Review"];
+  const steps = ["Visit", "Time", "Details", "Review"];
   return (
     <main className="portal-content booking-page">
       <PageHeader
@@ -611,8 +611,10 @@ export default function BookingPage() {
                   </small>
                 </label>
                 <label>
-                  Symptoms or questions{" "}
-                  <span className="optional-label">Optional</span>
+                  <span className="booking-field-label">
+                    Symptoms or questions
+                    <span className="optional-label">Optional</span>
+                  </span>
                   <textarea
                     maxLength={3000}
                     rows={3}
@@ -621,8 +623,10 @@ export default function BookingPage() {
                   />
                 </label>
                 <label>
-                  How severe does it feel?{" "}
-                  <span className="optional-label">Optional</span>
+                  <span className="booking-field-label">
+                    How severe does it feel?
+                    <span className="optional-label">Optional</span>
+                  </span>
                   <Select
                     value={severity}
                     onChange={(e) => setSeverity(e.target.value)}

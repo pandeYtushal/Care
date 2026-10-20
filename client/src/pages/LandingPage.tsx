@@ -199,7 +199,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <main>
+        <main id="main-content" tabIndex={-1}>
           {/* ─── HERO ─── */}
             <section className="lp-hero">
             <div className="lp-hero__blobs" aria-hidden="true">

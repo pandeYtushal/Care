@@ -168,7 +168,7 @@ export default function WorkspaceShell({ role }: { role: Role }) {
             </button>
           </div>
         </header>
-        <div className="portal-scroll-area"><Outlet /></div>
+        <div id="main-content" className="portal-scroll-area" tabIndex={-1}><Outlet /></div>
       </main>
     </div>
   );

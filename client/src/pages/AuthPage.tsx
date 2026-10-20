@@ -78,7 +78,7 @@ export default function AuthPage({ mode }: Props) {
   }
 
   return (
-    <main className="auth-page auth-entry-page">
+    <main id="main-content" tabIndex={-1} className="auth-page auth-entry-page">
       <aside className={`auth-story${clinicianLogin ? ' auth-story-clinician' : ''}`}>
         <Link to="/" className="auth-brand">
           <span className="auth-brand-mark"><BrandMark /></span>

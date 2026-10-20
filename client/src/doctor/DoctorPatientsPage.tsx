@@ -138,7 +138,7 @@ export default function DoctorPatientsPage() {
                 <div className="doctor-patient-cards">
                   {sortedPatients.map((patient) => <article className="doctor-patient-card" key={patient.id}>
                     <div className="doctor-patient-card-head"><div><span className="eyebrow">PATIENT</span><h2>{patient.full_name}</h2></div><Link to={`/doctor/patients/${patient.id}`} className="btn btn-secondary">Open chart</Link></div>
-                    <dl><div><dt>Email</dt><dd>{patient.email || "—"}</dd></div><div><dt>Phone</dt><dd>{patient.phone || "—"}</dd></div><div><dt>Appointments</dt><dd>{patient.appointment_count}</dd></div><div><dt>Last visit</dt><dd>{dateLabel(patient.last_appointment)}</dd></div></dl>
+                    <dl><div className="doctor-patient-email"><dt>Email</dt><dd>{patient.email || "—"}</dd></div><div><dt>Phone</dt><dd>{patient.phone || "—"}</dd></div><div><dt>Appointments</dt><dd>{patient.appointment_count}</dd></div><div><dt>Last visit</dt><dd>{dateLabel(patient.last_appointment)}</dd></div></dl>
                   </article>)}
                 </div>
                 <nav className="doctor-patient-pagination" aria-label="Patient directory pages">

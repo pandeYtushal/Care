@@ -370,3 +370,915 @@ svg {
     padding: 11px !important;
   }
 }
+
+/* Booking wizard: keep the step labels and choices legible on narrow screens. */
+.patient-portal .booking-concern-fields {
+  width: min(100%, 760px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 18px 16px;
+}
+
+.patient-portal .booking-concern-fields > label:first-child,
+.patient-portal .booking-concern-fields > .booking-attachment {
+  grid-column: 1 / -1;
+}
+
+.patient-portal .booking-field-label {
+  display: flex;
+  min-height: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 8px;
+  color: #40554a;
+}
+
+.patient-portal .booking-attachment {
+  min-width: 0;
+  margin: 0;
+  padding: 16px 17px;
+  border: 1px solid var(--patient-line);
+  border-radius: 14px;
+  background: #f8f8f4;
+}
+
+.patient-portal .booking-attachment > p { margin: 0; }
+.patient-portal .booking-attachment > label { max-width: 100%; }
+
+.patient-portal .booking-concern-fields :is(textarea, select):focus-visible {
+  outline: 2px solid #8fae92;
+  outline-offset: 2px;
+}
+
+.patient-portal .booking-review {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.patient-portal .booking-review .booking-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border: 1px solid var(--patient-line);
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgb(38 52 46 / 3%);
+}
+
+.patient-portal .booking-review .booking-summary > div {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 5px;
+  padding: 13px 16px;
+  border-right: 1px solid var(--patient-line);
+  border-bottom: 1px solid var(--patient-line);
+}
+
+.patient-portal .booking-review .booking-summary > div:nth-child(2n) { border-right: 0; }
+.patient-portal .booking-review .booking-summary > div:last-child { border-bottom: 0; }
+.patient-portal .booking-review .booking-summary dt { font-size: 11px; }
+.patient-portal .booking-review .booking-summary dd { font-size: 13px; line-height: 1.45; }
+
+.patient-portal .booking-payment-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px 12px;
+  padding: 13px 16px;
+  border-color: #e4e6dd;
+  border-radius: 12px;
+  background: #f3f5ef;
+  color: #52635a;
+}
+
+.patient-portal .booking-payment-note strong { color: #2f493b; font-size: 12px; }
+.patient-portal .booking-payment-note p { margin: 0; font-size: 12px; line-height: 1.5; }
+
+.patient-portal .booking-success {
+  width: min(100%, 680px);
+  margin: 10px auto 0;
+  padding: clamp(20px, 4vw, 34px);
+}
+
+.patient-portal .booking-success .booking-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  margin: 20px 0 22px;
+  border: 1px solid var(--patient-line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.patient-portal .booking-success .booking-summary > div {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
+  padding: 14px 16px;
+  border-right: 1px solid var(--patient-line);
+  border-bottom: 1px solid var(--patient-line);
+}
+
+.patient-portal .booking-success .booking-summary > div:nth-child(2n) { border-right: 0; }
+.patient-portal .booking-success .booking-summary > div:last-child { border-bottom: 0; }
+.patient-portal .booking-success .booking-summary dt { font-size: 11px; }
+.patient-portal .booking-success .booking-summary dd { font-size: 13px; line-height: 1.45; }
+
+.patient-portal .booking-success .portal-actions { gap: 10px; }
+.patient-portal .booking-success .portal-actions > * { min-height: 46px; border-radius: 11px; }
+
+/* Appointment detail: give the visit banner and empty sections a calmer rhythm. */
+.patient-portal .patient-appointment-detail .patient-visit-hero {
+  padding: 27px 32px;
+  border-radius: 19px;
+}
+
+.patient-portal .patient-appointment-detail .patient-visit-kicker { margin-bottom: 8px; }
+.patient-portal .patient-appointment-detail .patient-visit-heading .patient-visit-date { margin: 7px 0 13px; }
+.patient-portal .patient-appointment-detail .patient-detail-section { padding: clamp(19px, 2.5vw, 25px); }
+.patient-portal .patient-appointment-detail .patient-detail-section-heading { margin-bottom: 12px; }
+.patient-portal .patient-appointment-detail .patient-visit-summary .empty-state { padding: 15px; }
+
+@media (max-width: 600px) {
+  .patient-portal .booking-review .booking-summary { grid-template-columns: minmax(0, 1fr); }
+  .patient-portal .booking-review .booking-summary > div,
+  .patient-portal .booking-review .booking-summary > div:nth-child(2n) {
+    grid-template-columns: minmax(105px, .65fr) minmax(0, 1.35fr);
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--patient-line);
+  }
+  .patient-portal .booking-review .booking-summary > div:last-child { border-bottom: 0; }
+  .patient-portal .booking-payment-note { display: grid; gap: 5px; }
+
+  .patient-portal .booking-success .booking-summary { grid-template-columns: minmax(0, 1fr); }
+  .patient-portal .booking-success .booking-summary > div,
+  .patient-portal .booking-success .booking-summary > div:nth-child(2n) {
+    grid-template-columns: minmax(92px, .65fr) minmax(0, 1.35fr);
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--patient-line);
+  }
+  .patient-portal .booking-success .booking-summary > div:last-child { border-bottom: 0; }
+
+  .patient-portal .patient-appointment-detail .patient-visit-hero { padding: 22px 18px; }
+  .patient-portal .patient-appointment-detail .patient-visit-hero::after {
+    top: -150px;
+    right: -175px;
+    opacity: .7;
+  }
+  .patient-portal .patient-appointment-detail .patient-detail-section { padding: 18px 15px; }
+}
+
+/* Patient appointment details: turn the long stack into a clear visit dashboard. */
+.patient-portal .portal-content.patient-appointment-detail > .card.patient-visit-hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(24px, 4vw, 40px);
+  border: 1px solid #dce4d8;
+  border-radius: 24px;
+  color: #21392e;
+  background: linear-gradient(115deg, #fffefa 0%, #f4f7f0 100%);
+  box-shadow: 0 18px 44px rgb(38 62 48 / 7%);
+}
+.patient-portal .patient-appointment-detail .patient-visit-hero::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: #47755c;
+  content: "";
+}
+.patient-portal .patient-appointment-detail .patient-visit-hero::after { display: none; }
+.patient-portal .patient-appointment-detail .patient-visit-heading { max-width: 760px; }
+.patient-portal .patient-appointment-detail .appointment-detail-grid { grid-template-columns: minmax(0, 1fr) minmax(230px, .48fr); align-items: stretch; gap: clamp(20px, 4vw, 48px); }
+.patient-portal .patient-appointment-detail .patient-visit-next-step { position: relative; isolation: isolate; align-self: stretch; overflow: hidden; display: flex; flex-direction: column; justify-content: center; min-height: 158px; padding: 25px 26px; border: 0; border-radius: 19px; background: linear-gradient(145deg, #315f49, #244a38); box-shadow: inset 0 1px rgb(255 255 255 / 12%); }
+.patient-portal .patient-appointment-detail .patient-visit-next-step::after { position: absolute; z-index: -1; top: -68px; right: -52px; width: 170px; height: 170px; border: 1px solid rgb(255 255 255 / 13%); border-radius: 50%; box-shadow: 0 0 0 20px rgb(255 255 255 / 4%), 0 0 0 42px rgb(255 255 255 / 3%); content: ""; }
+.patient-portal .patient-appointment-detail .patient-visit-next-step > span { color: #c6dacb; font-size: 9px; font-weight: 700; letter-spacing: .15em; }
+.patient-portal .patient-appointment-detail .patient-visit-next-step > p { max-width: 30ch; margin: 11px 0 0; color: #fffefa; font-family: var(--font-display); font-size: clamp(17px, 2vw, 21px); line-height: 1.35; }
+.patient-portal .patient-appointment-detail .patient-visit-next-step .btn { display: inline-flex; width: max-content; min-height: 42px; margin-top: 17px; align-items: center; gap: 8px; padding-inline: 16px; border: 1px solid rgb(255 255 255 / 65%); border-radius: 999px; color: #244a38; background: #fffefa; font-size: 12px; }
+.patient-portal .patient-appointment-detail .patient-visit-kicker { color: #557d63; letter-spacing: .16em; }
+.patient-portal .portal-content.patient-appointment-detail .patient-visit-hero .patient-visit-service { color: #21392e; font-size: clamp(28px, 3.5vw, 42px); }
+.patient-portal .patient-appointment-detail .patient-visit-heading .patient-visit-date { margin: 10px 0 20px; color: #51675a; font-size: 15px; }
+.patient-portal .patient-appointment-detail .patient-visit-meta { gap: 9px; color: #51675a; }
+.patient-portal .patient-appointment-detail .patient-visit-meta > span:not(.patient-visit-status) { padding: 8px 12px; border: 1px solid #e0e7dd; border-radius: 999px; background: rgb(255 255 255 / 76%); }
+.patient-portal .patient-appointment-detail .patient-visit-meta > span.patient-visit-status { padding: 8px 13px; border: 0; color: #28553d; background: #e5efe5; }
+.patient-portal .patient-appointment-detail .patient-visit-hero .btn { min-height: 48px; padding-inline: 22px; border-radius: 999px; box-shadow: 0 8px 18px rgb(37 72 53 / 14%); }
+.patient-portal .patient-appointment-detail .patient-detail-records { margin-top: 18px; border-radius: 20px; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); gap: 18px; margin-top: 18px; align-items: stretch; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section { min-width: 0; margin: 0; padding: clamp(20px, 2.6vw, 28px); border-radius: 20px; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .patient-detail-section-heading { margin-bottom: 20px; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .patient-visit-summary { background: linear-gradient(145deg, #fffefa, #f9faf6); }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .patient-detail-prescriptions { background: #fffefa; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state { min-height: 150px; display: flex; flex-direction: column; justify-content: center; padding: 20px; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .card-list > .card { padding: 16px; }
+@media (max-width: 760px) {
+  .patient-portal .patient-appointment-detail .appointment-detail-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step { width: 100%; }
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid { grid-template-columns: 1fr; gap: 14px; }
+}
+@media (max-width: 600px) {
+  .patient-portal .portal-content.patient-appointment-detail > .card.patient-visit-hero { padding: 25px 20px 23px 23px; border-radius: 20px; }
+  .patient-portal .patient-appointment-detail .patient-visit-heading .patient-visit-date { margin-bottom: 16px; }
+  .patient-portal .patient-appointment-detail .patient-visit-meta { align-items: flex-start; gap: 7px; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step { min-height: 0; padding: 13px 0 0; border: 0; border-top: 1px solid #dce5dc; border-radius: 0; background: transparent; box-shadow: none; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step::after { display: none; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step > span { color: #557d63; font-size: 9px; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step > p { max-width: none; margin-top: 5px; color: #53685a; font-family: inherit; font-size: 12px; line-height: 1.5; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step .btn { width: 100%; min-height: 42px; justify-content: center; margin-top: 11px; border-color: #315f49; color: #fffefa; background: #315f49; box-shadow: none; }
+  .patient-portal .patient-appointment-detail .patient-visit-meta > span:not(.patient-visit-status) { padding: 7px 10px; }
+  .patient-portal .patient-appointment-detail .patient-detail-records { margin-top: 14px; }
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid { margin-top: 14px; }
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section { padding: 19px 16px; border-radius: 18px; }
+}
+
+@media (max-width: 760px) {
+  .patient-portal .booking-progress {
+    gap: 6px;
+    margin: 18px 0 14px;
+  }
+
+  .patient-portal .booking-progress > li {
+    min-height: 58px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 7px 3px;
+    border-radius: 13px;
+  }
+
+  .patient-portal .booking-progress > li strong {
+    display: block;
+    max-width: 100%;
+    font-size: 9px;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .patient-portal .booking-wizard {
+    gap: 15px;
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+
+  .patient-portal .booking-step-heading {
+    margin-bottom: 0;
+  }
+
+  .patient-portal .booking-step-heading h2 {
+    font-size: clamp(24px, 6vw, 30px);
+    line-height: 1.12;
+  }
+
+  .patient-portal .booking-step-heading p {
+    margin-top: 7px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .patient-portal .booking-service-options {
+    gap: 9px;
+  }
+
+  .patient-portal .booking-service-option {
+    min-height: 72px;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 13px;
+    border-radius: 12px;
+  }
+
+  .patient-portal .booking-service-option strong {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .patient-portal .booking-service-option .booking-price {
+    grid-column: auto;
+    align-self: start;
+    padding-top: 1px;
+    white-space: nowrap;
+  }
+
+  .patient-portal .booking-selection-hint {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .patient-portal .booking-wizard-actions {
+    gap: 9px;
+    margin-top: 0;
+    padding-top: 14px;
+  }
+
+  .patient-portal .booking-wizard-actions .btn {
+    min-height: 48px;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .patient-portal .booking-concern-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .patient-portal .booking-concern-fields > label:first-child,
+  .patient-portal .booking-concern-fields > .booking-attachment {
+    grid-column: auto;
+  }
+
+  .patient-portal .booking-attachment { padding: 14px; }
+}
+
+/* Appointment detail: use section dividers and rows instead of nested cards. */
+.patient-portal .portal-content.patient-appointment-detail > .card.patient-visit-hero {
+  padding: 8px 0 30px;
+  border: 0;
+  border-bottom: 1px solid #d9dfd5;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.patient-portal .patient-appointment-detail .patient-visit-hero::before { display: none; }
+.patient-portal .patient-appointment-detail .patient-visit-next-step {
+  min-height: 0;
+  padding: 8px 0 8px 18px;
+  border: 0;
+  border-left: 2px solid #78957f;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.patient-portal .patient-appointment-detail .patient-visit-next-step::after { display: none; }
+.patient-portal .patient-appointment-detail .patient-visit-next-step > span { color: #66806d; }
+.patient-portal .patient-appointment-detail .patient-visit-next-step > p { max-width: 32ch; margin-top: 7px; color: #304b3b; font-family: inherit; font-size: 14px; font-weight: 600; line-height: 1.55; }
+.patient-portal .patient-appointment-detail .patient-visit-next-step .btn { width: max-content; min-height: 40px; margin-top: 12px; border: 0; border-radius: 999px; color: #fffefa; background: #315f49; box-shadow: none; }
+.patient-portal .patient-appointment-detail > .card.patient-detail-records { margin-top: 0; padding: 25px 0; border: 0; border-bottom: 1px solid #d9dfd5; border-radius: 0; background: transparent; box-shadow: none; }
+.patient-portal .patient-appointment-detail .patient-detail-records .empty-state { min-height: 0; display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 3px 12px; padding: 12px 0; border: 0; border-radius: 0; background: transparent; }
+.patient-portal .patient-appointment-detail .patient-detail-records .empty-state .empty-symbol { grid-row: span 2; margin: 0; }
+.patient-portal .patient-appointment-detail .patient-detail-records .empty-state h2 { margin: 0; font-size: 15px; }
+.patient-portal .patient-appointment-detail .patient-detail-records .empty-state p { margin: 0; font-size: 12px; line-height: 1.5; }
+.patient-portal .patient-appointment-detail .patient-detail-section-heading { margin-bottom: 15px; }
+.patient-portal .patient-appointment-detail .patient-detail-section-heading h2 { color: #253a30; font-size: 18px; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 0; margin-top: 0; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section {
+  padding: 25px 24px 25px 0;
+  border: 0;
+  border-bottom: 1px solid #d9dfd5;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section + .patient-detail-section { padding: 25px 0 25px 24px; border-left: 1px solid #d9dfd5; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  justify-content: initial;
+  gap: 3px 12px;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state .empty-symbol { grid-row: span 2; margin: 0; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state h2 { margin: 0; font-size: 15px; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state p { margin: 0; font-size: 12px; line-height: 1.5; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .card-list { gap: 0; }
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .card-list > .card {
+  padding: 14px 0;
+  border: 0;
+  border-top: 1px solid #e3e7df;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+@media (max-width: 760px) {
+  .patient-portal .patient-appointment-detail > .card.patient-visit-hero { padding: 5px 0 22px; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step { padding: 12px 0 0; border-top: 1px solid #d9dfd5; border-left: 0; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step > p { max-width: none; font-size: 13px; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step .btn { width: 100%; justify-content: center; }
+  .patient-portal .patient-appointment-detail > .card.patient-detail-records { padding: 20px 0; }
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid { grid-template-columns: minmax(0, 1fr); }
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section + .patient-detail-section { padding: 20px 0; border-left: 0; }
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid .patient-detail-section-heading { margin-bottom: 8px; }
+}
+
+/* Fine-tune the flat mobile appointment layout so it feels composed, not bare. */
+@media (max-width: 760px) {
+  .patient-portal .patient-appointment-detail .patient-visit-heading { max-width: none; }
+  .patient-portal .patient-appointment-detail .patient-visit-kicker { margin-bottom: 7px; }
+  .patient-portal .portal-content.patient-appointment-detail .patient-visit-hero .patient-visit-service { max-width: 20ch; font-size: clamp(26px, 7vw, 32px); line-height: 1.12; }
+  .patient-portal .patient-appointment-detail .patient-visit-heading .patient-visit-date { margin: 10px 0 13px; }
+  .patient-portal .patient-appointment-detail .patient-visit-meta { gap: 6px; }
+  .patient-portal .patient-appointment-detail .patient-visit-meta > span:not(.patient-visit-status) { padding: 6px 9px; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step { margin-top: 15px; padding: 1px 0 1px 12px; border: 0; border-left: 2px solid #78957f; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step > p { margin-top: 4px; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step .btn { margin-top: 9px; }
+  .patient-portal .patient-appointment-detail .patient-detail-section-heading { align-items: center; margin-bottom: 9px; }
+  .patient-portal .patient-appointment-detail .patient-detail-section-heading > span { font-size: 10px; }
+  .patient-portal .patient-appointment-detail .patient-detail-records .empty-state,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 8px 0; }
+  .patient-portal .patient-appointment-detail .patient-detail-records .empty-state .empty-symbol,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state .empty-symbol { display: none; }
+  .patient-portal .patient-appointment-detail > .card.patient-detail-records { padding: 18px 0; }
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section + .patient-detail-section { padding: 18px 0; }
+}
+
+/* Mobile appointment details: keep only the information patients need at a glance. */
+@media (max-width: 600px) {
+  .patient-portal .patient-appointment-detail > h1 { margin: 2px 0 18px; font-size: 32px; line-height: 1.08; }
+  .patient-portal .patient-appointment-detail > .card.patient-visit-hero { padding: 0 0 18px; }
+  .patient-portal .patient-appointment-detail .patient-visit-kicker { margin-bottom: 5px; font-size: 9px; }
+  .patient-portal .portal-content.patient-appointment-detail .patient-visit-hero .patient-visit-service { max-width: 18ch; font-size: 27px; line-height: 1.12; }
+  .patient-portal .patient-appointment-detail .patient-visit-heading .patient-visit-date { margin: 8px 0 10px; font-size: 13px; }
+  .patient-portal .patient-appointment-detail .patient-visit-meta { align-items: center; gap: 5px 9px; }
+  .patient-portal .patient-appointment-detail .patient-visit-meta > span:not(.patient-visit-status) { padding: 0; border: 0; background: transparent; color: #69776e; font-size: 11px; }
+  .patient-portal .patient-appointment-detail .patient-visit-meta > span:not(.patient-visit-status) + span:not(.patient-visit-status)::before { margin-right: 8px; color: #a2aaa1; content: "·"; }
+  .patient-portal .patient-appointment-detail .patient-visit-meta > span.patient-visit-status { padding: 5px 8px; font-size: 9px; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step { margin-top: 12px; padding: 0; border: 0; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step > span,
+  .patient-portal .patient-appointment-detail .patient-visit-next-step > p { display: none; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step:not(:has(.btn)) { display: none; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step .btn { min-height: 43px; margin: 0; }
+  .patient-portal .patient-appointment-detail > .card.patient-detail-records { padding: 16px 0; }
+  .patient-portal .patient-appointment-detail .patient-detail-section-heading { margin: 0 0 6px; }
+  .patient-portal .patient-appointment-detail .patient-detail-section-heading h2 { font-size: 16px; }
+  .patient-portal .patient-appointment-detail .patient-detail-section-heading > span { display: none; }
+  .patient-portal .patient-appointment-detail .patient-detail-records .empty-state,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state { padding: 5px 0; }
+  .patient-portal .patient-appointment-detail .patient-detail-records .empty-state h2,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state h2 { font-size: 14px; }
+  .patient-portal .patient-appointment-detail .patient-detail-records .empty-state p,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state p { font-size: 11px; }
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section + .patient-detail-section { padding: 16px 0; }
+}
+
+/* Appointment detail: a quiet editorial hierarchy, with no extra card chrome. */
+.patient-portal .patient-appointment-detail > h1 { margin-bottom: 22px; }
+.patient-portal .portal-content.patient-appointment-detail > .card.patient-visit-hero {
+  margin-bottom: 6px;
+  padding: 4px 0 25px;
+  border: 0;
+  border-bottom: 1px solid #d5ddd3;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.patient-portal .patient-appointment-detail .patient-visit-kicker { margin-bottom: 9px; color: #52775c; font-size: 9px; letter-spacing: .2em; }
+.patient-portal .portal-content.patient-appointment-detail .patient-visit-hero .patient-visit-service { max-width: 30ch; color: #18392d; font-size: clamp(28px, 3.4vw, 40px); line-height: 1.1; }
+.patient-portal .patient-appointment-detail .patient-visit-heading .patient-visit-date { margin: 11px 0 15px; color: #5e6e63; font-size: 14px; }
+.patient-portal .patient-appointment-detail .patient-visit-meta { gap: 7px; }
+.patient-portal .patient-appointment-detail .patient-visit-meta > span:not(.patient-visit-status) { padding: 0; border: 0; color: #65736a; background: transparent; font-size: 11px; }
+.patient-portal .patient-appointment-detail .patient-visit-meta > span.patient-visit-status { padding: 5px 9px; border-radius: 999px; font-size: 9px; }
+.patient-portal .patient-appointment-detail .patient-detail-records .empty-state .empty-symbol,
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state .empty-symbol { display: none; }
+.patient-portal .patient-appointment-detail .patient-detail-section-heading h2 { color: #233c30; font-size: 19px; letter-spacing: -.025em; }
+.patient-portal .patient-appointment-detail .patient-detail-section-heading > span { color: #7c877e; font-size: 10px; }
+.patient-portal .patient-appointment-detail .patient-detail-records .empty-state h2,
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state h2 { color: #30483a; font-size: 14px; font-weight: 600; }
+.patient-portal .patient-appointment-detail .patient-detail-records .empty-state p,
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state p { max-width: 58ch; color: #7a857c; font-size: 12px; line-height: 1.55; }
+@media (max-width: 600px) {
+  .patient-portal .patient-appointment-detail > h1 { margin: 2px 0 21px; font-size: 34px; line-height: 1.05; letter-spacing: -.035em; }
+  .patient-portal .portal-content.patient-appointment-detail > .card.patient-visit-hero { margin-bottom: 4px; padding: 0 0 22px; }
+  .patient-portal .patient-appointment-detail .patient-visit-kicker { margin-bottom: 8px; }
+  .patient-portal .portal-content.patient-appointment-detail .patient-visit-hero .patient-visit-service { max-width: none; font-size: clamp(27px, 7vw, 31px); line-height: 1.12; overflow-wrap: break-word; }
+  .patient-portal .patient-appointment-detail .patient-visit-heading .patient-visit-date { margin: 9px 0 12px; font-size: 13px; }
+  .patient-portal .patient-appointment-detail .patient-visit-meta { gap: 6px 9px; }
+  .patient-portal .patient-appointment-detail .patient-visit-meta > span:not(.patient-visit-status) { font-size: 10px; }
+  .patient-portal .patient-appointment-detail .patient-detail-section-heading { align-items: baseline; margin-bottom: 9px; }
+  .patient-portal .patient-appointment-detail .patient-detail-section-heading h2 { font-size: 18px; }
+  .patient-portal .patient-appointment-detail .patient-detail-section-heading > span { display: inline; font-size: 9px; }
+  .patient-portal .patient-appointment-detail .patient-detail-records .empty-state,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 7px 0; }
+  .patient-portal .patient-appointment-detail .patient-detail-records .empty-state h2,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state h2 { font-size: 14px; }
+  .patient-portal .patient-appointment-detail .patient-detail-records .empty-state p,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state p { max-width: 35ch; font-size: 11px; }
+  .patient-portal .patient-appointment-detail > .card.patient-detail-records .patient-detail-section-heading > span,
+  .patient-portal .patient-appointment-detail .patient-visit-summary .patient-detail-section-heading > span { display: none; }
+  .patient-portal .patient-appointment-detail > .card.patient-detail-records,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section + .patient-detail-section { padding-block: 15px; }
+  .patient-portal .patient-appointment-detail .patient-detail-section-heading { margin-bottom: 7px; }
+  .patient-portal .patient-appointment-detail .patient-detail-records .empty-state,
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state { padding: 5px 0; }
+}
+
+/* Appointment details: prevent hidden empty-state icons from leaving a dead grid column. */
+.patient-portal .patient-appointment-detail .patient-detail-records .empty-state,
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.patient-portal .patient-appointment-detail .patient-detail-records .empty-state h2,
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state h2 {
+  width: auto;
+  margin: 0 0 5px;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.patient-portal .patient-appointment-detail .patient-detail-records .empty-state p,
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid .empty-state p {
+  width: auto;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid,
+.patient-portal .patient-appointment-detail .patient-appointment-record-grid > .patient-detail-section { min-width: 0; }
+@media (max-width: 760px) {
+  .patient-portal .patient-appointment-detail .appointment-detail-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .patient-portal .patient-appointment-detail .patient-visit-next-step { width: 100%; }
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 761px) and (max-width: 1040px) {
+  .patient-portal .patient-appointment-detail .patient-appointment-record-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+/* Patient prescriptions: present entries as one calm, scannable list. */
+.patient-portal .patient-prescriptions-page .prescriptions-workspace { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.patient-portal .patient-prescriptions-page .prescriptions-workspace .patient-prescription-list { position: relative; gap: 0; }
+.patient-portal .patient-prescriptions-page .prescriptions-workspace .patient-prescription-list::before { position: absolute; top: 20px; bottom: 20px; left: 16px; width: 1px; background: #dce5dc; content: ""; }
+.patient-portal .patient-prescriptions-page .prescriptions-workspace .card-list > .card {
+  position: relative;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 11px;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.patient-portal .patient-prescriptions-page .prescriptions-workspace .patient-prescription-list > .card > svg { z-index: 1; display: block; box-sizing: border-box; width: 33px; height: 33px; margin: 0; padding: 8px; border-radius: 50%; color: #416c51; background: #e8efe7; }
+.patient-portal .patient-prescriptions-page .prescriptions-workspace .patient-prescription-list > .card > div { min-width: 0; padding: 2px 0 12px; border-bottom: 1px solid #e5e9e2; }
+.patient-portal .patient-prescriptions-page .prescriptions-workspace .patient-prescription-list > .card:last-child > div { border-bottom: 0; }
+.patient-portal .patient-prescriptions-page .prescription-entry-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.patient-portal .patient-prescriptions-page .prescriptions-workspace .card-list > .card strong { color: #263b30; font-size: 13px; font-weight: 650; }
+.patient-portal .patient-prescriptions-page .prescription-entry-heading time { flex: 0 0 auto; color: #758178; font-size: 11px; text-align: right; white-space: nowrap; }
+.patient-portal .patient-prescriptions-page .prescriptions-workspace .card-list > .card p { margin: 5px 0 0; }
+.patient-portal .patient-prescriptions-page .prescriptions-workspace .card-list > .card .prescription-detail-unavailable { color: #899188; font-size: 11px; }
+.patient-portal .patient-prescriptions-page .prescriptions-workspace .card-list > .card ul { margin: 7px 0 0; }
+@media (max-width: 600px) {
+  .patient-portal .patient-prescriptions-page .prescriptions-workspace .patient-prescription-list > .card { padding: 9px 0; }
+  .patient-portal .patient-prescriptions-page .prescriptions-workspace .patient-prescription-list > .card strong { font-size: 12px; }
+  .patient-portal .patient-prescriptions-page .prescription-entry-heading { gap: 6px; }
+  .patient-portal .patient-prescriptions-page .prescription-entry-heading time { font-size: 10px; }
+}
+
+/* Patient sidebar: clear hierarchy and deliberate default, hover, active, and focus states. */
+.patient-portal .portal-sidebar {
+  border-right: 1px solid #e2e7de;
+  background: #fbfbf7;
+  box-shadow: 4px 0 22px rgb(39 58 46 / 3%);
+}
+.patient-portal .sidebar-header { min-height: 82px; padding: 15px 16px; border-bottom-color: #e8ebe4; background: #fbfbf7; }
+.patient-portal .portal-brand-mark { width: 42px; height: 42px; border-radius: 14px; }
+.patient-portal .sidebar-nav { padding: 18px 12px 20px; scrollbar-width: thin; scrollbar-color: #d8e0d6 transparent; }
+.patient-portal .patient-nav-group + .patient-nav-group { margin-top: 20px; }
+.patient-portal .nav-group-label { margin: 0 11px 8px; color: #89958b; font-size: 9px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+.patient-portal .nav-item {
+  position: relative;
+  min-height: 44px;
+  gap: 11px;
+  margin-block: 3px;
+  padding-inline: 11px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: #53665a;
+  font-size: 12px;
+  font-weight: 550;
+  transition: transform .16s ease, color .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+.patient-portal .nav-item svg { color: #829287; transition: color .16s ease, transform .16s ease; }
+.patient-portal .nav-item:hover,
+.patient-portal .nav-item:focus-visible { transform: translateX(2px); border-color: #e1e8df; color: #294c38; background: #f0f4ed; }
+.patient-portal .nav-item:hover svg,
+.patient-portal .nav-item:focus-visible svg { color: #3f7053; transform: scale(1.04); }
+.patient-portal .nav-item.active { border-color: #dfe8dd; color: #244a35; background: #e8f0e7; box-shadow: inset 3px 0 #47785a; font-weight: 700; }
+.patient-portal .nav-item.active svg { color: #376a4e; }
+.patient-portal .nav-item-primary {
+  min-height: 47px;
+  margin-block: 7px 13px;
+  padding-inline: 12px;
+  border-color: #315f49;
+  color: #fffefa;
+  background: #315f49;
+  box-shadow: 0 5px 12px rgb(49 95 73 / 13%);
+  font-weight: 650;
+}
+.patient-portal .nav-item-primary svg,
+.patient-portal .nav-item-primary .nav-action-arrow { color: #eff6ee; }
+.patient-portal .nav-item-primary:hover,
+.patient-portal .nav-item-primary:focus-visible { transform: translateY(-1px); border-color: #244b37; color: #fffefa; background: #244b37; box-shadow: 0 7px 15px rgb(49 95 73 / 19%); }
+.patient-portal .nav-item-primary.active { border-color: #244b37; color: #fffefa; background: #244b37; box-shadow: inset 3px 0 #d7e8d8, 0 5px 12px rgb(49 95 73 / 13%); }
+.patient-portal .nav-item-primary.active svg { color: #fffefa; }
+.patient-portal :is(.nav-item, .user-profile-button):focus-visible { outline: 3px solid #80a68a; outline-offset: 2px; }
+.patient-portal .nav-unread-count { margin-left: auto; border-color: #fbfbf7; }
+.patient-portal .sidebar-footer { padding: 13px; border-top-color: #e6e9e1; background: #f6f7f1; }
+.patient-portal .user-profile-button { min-height: 58px; gap: 11px; padding: 8px 10px; border-color: transparent; border-radius: 13px; transition: border-color .16s ease, background .16s ease; }
+.patient-portal .user-profile-button:hover { border-color: #e1e7de; background: #fffefa; }
+.patient-portal .user-avatar { width: 40px; height: 40px; flex-basis: 40px; }
+.patient-portal .nav-item.active:not(.nav-item-primary) {
+  border-color: transparent;
+  color: #244a35;
+  background: #edf2eb;
+  box-shadow: none;
+  font-weight: 700;
+}
+.patient-portal .nav-item.active:not(.nav-item-primary)::before {
+  position: absolute;
+  inset: 10px auto 10px 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #47785a;
+  content: "";
+}
+.patient-portal .nav-item.active:not(.nav-item-primary) svg { color: #376a4e; }
+.patient-portal .nav-item.active:not(.nav-item-primary):hover { transform: none; background: #edf2eb; }
+.patient-portal .nav-item-primary.active { border-color: #244b37; background: #244b37; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) {
+  .patient-portal .nav-item,
+  .patient-portal .nav-item svg,
+  .patient-portal .user-profile-button { transition: none; }
+}
+
+/* The generic patient empty state reserves a 40px icon column. Status errors
+   have no icon, so give the direct loading/error panel its own real layout. */
+.patient-portal .portal-content.patient-appointment-detail > .empty-state {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0;
+  border: 0;
+  border-block: 1px solid #e2e7df;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.patient-portal .portal-content.patient-appointment-detail > .empty-state > p {
+  min-width: 0;
+  flex: 1 1 240px;
+  margin: 0;
+  color: #586a5e;
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: left;
+  overflow-wrap: normal;
+}
+
+.patient-portal .portal-content.patient-appointment-detail > .empty-state > .btn {
+  width: auto;
+  min-width: 126px;
+  min-height: 42px;
+  flex: 0 0 auto;
+  margin: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .patient-portal .portal-content.patient-appointment-detail > .empty-state {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    padding: 17px 0;
+  }
+
+  .patient-portal .portal-content.patient-appointment-detail > .empty-state > p {
+    flex: none;
+    width: 100%;
+  }
+}
+
+/* Shared search and filter sizing for both portal roles. Keep the wrapper as
+   the only visible search control and let every grid/flex child shrink safely. */
+.patient-portal .portal-content :is(.appointment-tools, .doctor-patient-toolbar, .reports-controls, .doctor-calendar-filters),
+.doctor-workspace .portal-content :is(.appointment-tools, .doctor-patient-toolbar, .reports-controls, .doctor-calendar-filters) {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.patient-portal .portal-content .appointment-tools,
+.doctor-workspace .portal-content .appointment-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px) auto;
+  align-items: center;
+}
+
+.patient-portal .portal-content .appointment-tools:not(:has(.appointment-date-filter)),
+.doctor-workspace .portal-content .appointment-tools:not(:has(.appointment-date-filter)) {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+}
+
+.patient-portal .portal-content .appointment-filters,
+.doctor-workspace .portal-content .appointment-filters {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.patient-portal .portal-content .list-search,
+.doctor-workspace .portal-content .list-search,
+.patient-portal .portal-content .doctor-patient-search,
+.doctor-workspace .portal-content .doctor-patient-search {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.patient-portal .portal-content .list-search > input,
+.doctor-workspace .portal-content .list-search > input {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 0%;
+  box-sizing: border-box;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.patient-portal .portal-content .list-search:focus-within,
+.doctor-workspace .portal-content .list-search:focus-within {
+  border-color: #89a38d;
+  outline: 3px solid rgb(79 126 94 / 16%);
+  outline-offset: 1px;
+}
+
+.patient-portal .portal-content .doctor-patient-toolbar .doctor-patient-search > input,
+.doctor-workspace .portal-content .doctor-patient-toolbar .doctor-patient-search > input {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 0%;
+  box-sizing: border-box;
+}
+
+.patient-portal .portal-content .doctor-calendar-filters,
+.doctor-workspace .portal-content .doctor-calendar-filters {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 260px);
+}
+
+.patient-portal .portal-content .doctor-calendar-filters > label,
+.doctor-workspace .portal-content .doctor-calendar-filters > label {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .patient-portal .portal-content .appointment-tools,
+  .doctor-workspace .portal-content .appointment-tools {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  /* Match the desktop selector's specificity: the :has() variant otherwise
+     keeps a second, 220px search column at phone widths and crushes the tabs. */
+  .patient-portal .portal-content .appointment-tools:not(:has(.appointment-date-filter)),
+  .doctor-workspace .portal-content .appointment-tools:not(:has(.appointment-date-filter)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .patient-portal .portal-content .appointment-tools .appointment-filters,
+  .doctor-workspace .portal-content .appointment-tools .appointment-filters {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-self: stretch;
+  }
+
+  .doctor-workspace .portal-content .appointment-tools .appointment-filters {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .patient-portal .portal-content .appointment-tools .appointment-filters button,
+  .doctor-workspace .portal-content .appointment-tools .appointment-filters button {
+    min-width: 0;
+    padding-inline: clamp(3px, 1.4vw, 8px);
+    gap: 4px;
+  }
+
+  .patient-portal .portal-content .appointment-tools .list-search,
+  .doctor-workspace .portal-content .appointment-tools .list-search,
+  .patient-portal .portal-content .appointment-date-filter,
+  .doctor-workspace .portal-content .appointment-date-filter {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .patient-portal .portal-content .appointment-tools .list-search,
+  .doctor-workspace .portal-content .appointment-tools .list-search {
+    min-height: 44px;
+    height: 44px;
+    align-self: stretch;
+  }
+
+  .patient-portal .portal-content .appointment-tools .list-search > input,
+  .doctor-workspace .portal-content .appointment-tools .list-search > input {
+    height: 42px;
+    min-height: 42px;
+  }
+
+  .patient-portal .portal-content .appointment-tools .appointment-date-filter input,
+  .doctor-workspace .portal-content .appointment-tools .appointment-date-filter input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .patient-portal .portal-content .doctor-patient-toolbar,
+  .doctor-workspace .portal-content .doctor-patient-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .patient-portal .portal-content .reports-controls,
+  .doctor-workspace .portal-content .reports-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .patient-portal .portal-content .reports-controls > *,
+  .doctor-workspace .portal-content .reports-controls > * {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .patient-portal .portal-content .doctor-calendar-filters,
+  .doctor-workspace .portal-content .doctor-calendar-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .doctor-workspace .portal-content .appointment-tools .appointment-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Calendar agenda: date-led groups and flat visit rows on wide screens, then
+   a compact time rail and full-width details on phones. */
+.doctor-workspace .calendar-days { display: grid; gap: 28px; }
+.doctor-workspace .calendar-day { margin: 0; overflow: visible; border: 0; border-top: 1px solid #dce3d9; border-radius: 0; background: transparent; box-shadow: none; }
+.doctor-workspace .calendar-day-heading { min-height: 58px; padding: 12px 2px; border-bottom: 1px solid #dce3d9; background: transparent; }
+.doctor-workspace .calendar-day-heading h2 { color: #294334; font-family: var(--font-display); font-size: 21px; font-weight: 500; letter-spacing: -.025em; }
+.doctor-workspace .calendar-day-heading span { padding: 0; border: 0; color: #738076; background: transparent; font-size: 10px; font-variant-numeric: tabular-nums; }
+.doctor-workspace .calendar-appointments { gap: 0; padding: 0; }
+.doctor-workspace .calendar-appointment { min-width: 0; grid-template-columns: 88px minmax(0, 1fr) 112px; gap: 16px; align-items: center; padding: 17px 4px; border: 0; border-bottom: 1px solid #e4e8e1; border-radius: 0; background: transparent; transition: background-color .16s ease; }
+.doctor-workspace .calendar-appointment:hover { border-color: #e4e8e1; background: #f0f3ed; box-shadow: none; }
+.doctor-workspace .calendar-appointment > time { display: block; padding: 0 0 0 12px; border-left: 2px solid #548064; color: #3e624b; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.doctor-workspace .calendar-appointment.status-pending > time { border-color: #b77a35; }
+.doctor-workspace .calendar-appointment.status-in_progress > time { border-color: #5a86a0; }
+.doctor-workspace .calendar-appointment.status-completed > time { border-color: #7c887e; }
+.doctor-workspace .calendar-appointment.status-cancelled > time,
+.doctor-workspace .calendar-appointment.status-no_show > time { border-color: #a66a5e; }
+.doctor-workspace .calendar-appointment time small { margin-top: 5px; color: #849087; font-size: 10px; font-weight: 450; }
+.doctor-workspace .calendar-appointment > div { min-width: 0; }
+.doctor-workspace .calendar-appointment > div > strong { color: #30453a; font-size: 14px; }
+.doctor-workspace .calendar-appointment > div > p { margin: 4px 0 7px; color: #718075; font-size: 11px; line-height: 1.5; overflow-wrap: break-word; }
+.doctor-workspace .calendar-appointment-status { display: inline-flex; min-height: 22px; align-items: center; margin: 0; padding: 3px 8px; border-radius: 999px; color: #42684e; background: #edf3eb; font-size: 9px; font-weight: 650; text-transform: capitalize; }
+.doctor-workspace .calendar-appointment.status-pending .calendar-appointment-status { color: #8a5a20; background: #f8f0e2; }
+.doctor-workspace .calendar-appointment.status-in_progress .calendar-appointment-status { color: #426985; background: #edf3f7; }
+.doctor-workspace .calendar-appointment.status-completed .calendar-appointment-status { color: #66736a; background: #f0f2ee; }
+.doctor-workspace .calendar-appointment > a { min-height: 40px; align-self: center; justify-content: center; padding: 0 12px; border: 1px solid #dce5db; border-radius: 9px; color: #3d6a4d; background: #fffefa; font-size: 11px; font-weight: 650; text-decoration: none; white-space: nowrap; }
+.doctor-workspace .calendar-appointment > a:hover { border-color: #aac0ac; color: #2e583e; background: #edf4ec; }
+.doctor-workspace .calendar-appointment > a:focus-visible { outline: 3px solid rgb(79 126 94 / 22%); outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .doctor-workspace .calendar-days { gap: 23px; }
+  .doctor-workspace .calendar-appointment { grid-template-columns: 76px minmax(0, 1fr) 96px; gap: 12px; padding: 15px 2px; }
+  .doctor-workspace .calendar-appointment > a { min-height: 38px; padding-inline: 9px; }
+}
+
+@media (max-width: 640px) {
+  .doctor-workspace .calendar-days { gap: 22px; }
+  .doctor-workspace .calendar-day-heading { min-height: 50px; padding: 10px 1px; }
+  .doctor-workspace .calendar-day-heading h2 { font-size: 19px; }
+  .doctor-workspace .calendar-appointment { grid-template-columns: 60px minmax(0, 1fr); gap: 5px 12px; padding: 15px 1px; }
+  .doctor-workspace .calendar-appointment > time { grid-column: 1; grid-row: 1 / span 2; align-self: start; padding: 2px 0 0 9px; font-size: 11px; }
+  .doctor-workspace .calendar-appointment > div { grid-column: 2; grid-row: 1; }
+  .doctor-workspace .calendar-appointment > div > strong { font-size: 13px; }
+  .doctor-workspace .calendar-appointment > div > p { margin: 4px 0 6px; font-size: 11px; }
+  .doctor-workspace .calendar-appointment > a { grid-column: 2; grid-row: 2; justify-self: start; min-height: 38px; margin-left: -8px; padding-inline: 8px; border: 0; background: transparent; }
+  .doctor-workspace .calendar-appointment > a:hover { border: 0; background: #edf3eb; }
+}
+
+@media (max-width: 380px) {
+  .doctor-workspace .calendar-day-heading h2 { font-size: 17px; }
+  .doctor-workspace .calendar-appointment { grid-template-columns: 53px minmax(0, 1fr); gap: 5px 9px; }
+}

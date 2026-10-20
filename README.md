@@ -76,7 +76,7 @@ Never commit real keys or put provider secrets in `VITE_*` variables. Do not ena
 
 Migrations are applied in filename order and tracked in `schema_migrations`. Each migration is transactionally applied under a PostgreSQL advisory lock. Back up the database before production migrations. The initial schema includes domain entities and an overlap exclusion constraint; later migrations add user sessions, consistency constraints, and webhook idempotency records. No development or production seed data is included.
 
-The schema still needs transaction-backed application services for slot generation/reservation, payment reconciliation, report access, and clinical records. Exclusion constraints are a final defense; application code must validate availability and translate conflicts into a safe response.
+Booking and rescheduling validate generated slots inside transactions, serialize changes with per-doctor/day advisory locks, and rely on the appointment exclusion constraint as a final overlap guard. Payment reconciliation and provider webhooks remain unimplemented.
 
 ## API routes currently implemented
 
@@ -96,6 +96,9 @@ GET  /api/portal/profile
 PATCH /api/portal/profile
 GET  /api/portal/availability
 PUT  /api/portal/availability
+GET  /api/portal/availability/exceptions
+POST /api/portal/availability/exceptions
+DELETE /api/portal/availability/exceptions/:id
 GET  /api/portal/services
 POST /api/portal/services
 PATCH /api/portal/services/:id
@@ -104,6 +107,9 @@ GET  /api/booking/slots?serviceId=…&date=YYYY-MM-DD
 POST /api/booking/appointments
 PATCH /api/portal/appointments/:id/status
 POST /api/portal/appointments/:id/cancel-request
+POST /api/portal/appointments/:id/reschedule-request
+POST /api/portal/appointments/:id/reschedule-request/cancel
+PATCH /api/portal/reschedule-requests/:id
 GET  /api/portal/appointments/:id
 PUT  /api/portal/appointments/:id/consultation
 POST /api/portal/appointments/:id/prescriptions
@@ -135,7 +141,7 @@ npm --prefix server run build
 ## Provider and deployment setup still required
 
 - **Razorpay:** server-side order creation, checkout signature verification, webhook signature validation, replay/idempotency, refund reconciliation, and appointment confirmation are not implemented. Never trust client payment status.
-- **Google Calendar/Meet:** doctor OAuth connection, encrypted server-side tokens, refresh handling, and Meet event creation for accepted appointments are implemented. Rescheduling and event deletion are still missing. Calendar setup must be tested with the doctor's Google Cloud client, callback URI, Calendar API enablement, OAuth consent/test-user settings, and token encryption key.
+- **Google Calendar/Meet:** doctor OAuth connection, encrypted server-side tokens, refresh handling, Meet event creation for accepted appointments, and event-time updates on approved reschedules are implemented. Event deletion/cancellation sync remains missing. Calendar setup must be tested with the doctor's Google Cloud client, callback URI, Calendar API enablement, OAuth consent/test-user settings, and token encryption key.
 - **WhatsApp Business, email, SMS:** no provider adapter, templates, consent/preferences, delivery tracking, or reminders are implemented.
 - **Medical files:** authenticated PDF/JPG/PNG uploads and downloads are implemented with 8 MB limit and file-signature checks; binary data is stored in PostgreSQL. Malware scanning, managed file storage, encryption/backup policy, retention, and restore drills are not implemented.
 - **Production:** provide managed PostgreSQL, HTTPS, exact frontend origins, same-origin `/api` proxy, secrets management, backups/restore drills, monitoring, migrations, OAuth callback domains, payment webhooks, and private object storage. `client/vercel.json` currently contains only the SPA rewrite; it does not configure the API proxy or production security headers.

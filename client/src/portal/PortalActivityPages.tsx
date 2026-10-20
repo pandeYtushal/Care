@@ -220,6 +220,9 @@ export function PatientReportsPage() {
     [notice, setNotice] = useState(""),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("All");
+  const [deletingId, setDeletingId] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteNotice, setDeleteNotice] = useState("");
   async function upload(e: FormEvent) {
     e.preventDefault();
     if (!file) return;
@@ -257,6 +260,22 @@ export function PatientReportsPage() {
       );
     } finally {
       setBusy(false);
+    }
+  }
+  async function deleteReport(id: string) {
+    const record = records.find((item) => String(item.id) === id);
+    if (!record || !window.confirm(`Delete “${String(record.original_filename)}” from your care record? This cannot be undone.`)) return;
+    setDeletingId(id);
+    setDeleteError("");
+    setDeleteNotice("");
+    try {
+      await api(`/portal/records/${encodeURIComponent(id)}`, { method: "DELETE" });
+      setDeleteNotice("Report deleted from your care record.");
+      retry();
+    } catch (reason) {
+      setDeleteError(reason instanceof ApiError ? reason.message : "Could not delete this report.");
+    } finally {
+      setDeletingId("");
     }
   }
   const visible = records.filter(
@@ -360,8 +379,10 @@ export function PatientReportsPage() {
           </div>
         </div>
         <Status loading={loading} error={error} onRetry={retry}>
+          {deleteError && <p className="form-error report-feedback" role="alert">{deleteError}</p>}
+          {deleteNotice && <p className="form-notice report-feedback" role="status">{deleteNotice}</p>}
           {visible.length ? (
-            <RecordList records={visible} variant="reports" />
+            <RecordList records={visible} variant="reports" onDelete={(id) => void deleteReport(id)} deletingId={deletingId} />
           ) : (
             <Empty
               className="report-empty-state"
@@ -400,6 +421,10 @@ export function NotificationsPage() {
     APPOINTMENT_ACCEPTED: "Your appointment was accepted",
     APPOINTMENT_DECLINED: "Your appointment request was declined",
     APPOINTMENT_REQUEST_CANCELLED: "A patient cancelled an appointment request",
+    APPOINTMENT_RESCHEDULE_REQUESTED: "A patient requested a new appointment time",
+    APPOINTMENT_RESCHEDULE_ACCEPTED: "Your new appointment time was approved",
+    APPOINTMENT_RESCHEDULE_DECLINED: "Your time change request was declined",
+    APPOINTMENT_RESCHEDULE_CANCELLED: "A patient cancelled a time change request",
     PRESCRIPTION_AVAILABLE: "A prescription is available",
   };
   async function markRead(id: string) {

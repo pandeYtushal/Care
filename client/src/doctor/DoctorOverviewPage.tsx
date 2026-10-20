@@ -88,7 +88,7 @@ export default function DoctorOverviewPage() {
                 <span className="agenda-marker" />
                 <div className="agenda-visit"><strong>{appointment.patient_name || "Patient"}</strong><p>{appointment.service_name} · {appointment.method.replaceAll("_", " ")}</p></div>
                 <span className={`status-pill status-${appointment.status.toLowerCase()}`}>{appointment.status.replaceAll("_", " ")}</span>
-                <Link className="button-secondary button" to={`/doctor/appointments/${appointment.id}`}>Open</Link>
+                <Link className="button-secondary button" to={`/doctor/appointments/${appointment.id}`}>{appointment.status === "PENDING" ? "Review request" : "Open visit"}</Link>
               </article>)}
             </div> : <ClearState icon={<Clock3 size={19} />} title="No visits scheduled today" text="Use the calendar to review your upcoming schedule." />}
           </section>
