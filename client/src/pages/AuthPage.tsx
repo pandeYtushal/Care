@@ -11,7 +11,7 @@ type LoginUser = { id?: string; role: 'PATIENT' | 'DOCTOR' | 'ADMIN' };
 
 export default function AuthPage({ mode }: Props) {
   const isRegister = mode === 'register';
-  const { user, refresh, sessionCheckFailed } = useAuth();
+  const { user, loading: authLoading, refresh, sessionCheckFailed } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [search] = useSearchParams();
@@ -33,6 +33,14 @@ export default function AuthPage({ mode }: Props) {
     else if (authError) setError('Google sign-in did not complete. Please try again or use another sign-in method.');
     else if (search.get('google') === 'success') setNotice('You’re signed in with Google. Opening your care space…');
   }, [search]);
+
+  useEffect(() => {
+    if (search.get('google') !== 'success' || authLoading || user) return;
+    setNotice('');
+    setError(sessionCheckFailed
+      ? 'Google returned to the app, but the care service could not confirm your session. Please retry or use another sign-in method.'
+      : 'Google returned to the app, but your sign-in could not be confirmed. Check that your browser allows secure cookies for the care app, then try again.');
+  }, [search, authLoading, user, sessionCheckFailed]);
 
   if (user) return <Navigate to={user.role === 'PATIENT' ? '/patient' : user.role === 'DOCTOR' ? '/doctor' : '/'} replace />;
 

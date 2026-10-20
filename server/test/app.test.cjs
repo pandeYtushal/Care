@@ -5,6 +5,10 @@ process.env.NODE_ENV = 'test';
 process.env.PORT = '5000';
 process.env.DATABASE_URL = 'postgresql://invalid:invalid@127.0.0.1:5432/unused';
 process.env.APP_ORIGINS = 'http://localhost:5173';
+process.env.GOOGLE_CLIENT_ID = '';
+process.env.GOOGLE_CLIENT_SECRET = '';
+process.env.GOOGLE_REDIRECT_URI = '';
+process.env.GOOGLE_CALENDAR_REDIRECT_URI = '';
 
 const { app } = require('../dist/app.js');
 const { HttpError, requiredUuid } = require('../dist/http.js');
@@ -32,9 +36,28 @@ test('health endpoint returns liveness and security headers', async () => {
 test('CORS allows only the configured exact origin', async () => {
   const allowed = await fetch(`${origin}/api/health`, { headers: { Origin: 'http://localhost:5173' } });
   assert.equal(allowed.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+  assert.equal(allowed.headers.get('access-control-allow-credentials'), 'true');
   const denied = await fetch(`${origin}/api/health`, { headers: { Origin: 'https://attacker.example' } });
   assert.equal(denied.status, 403);
   assert.equal(denied.headers.get('access-control-allow-origin'), null);
+});
+
+test('an unauthenticated auth check returns a normal 401 without querying a session', async () => {
+  const response = await fetch(`${origin}/api/auth/me`);
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { error: { message: 'Sign in to continue.' } });
+});
+
+test('Google sign-in start reports missing provider configuration safely', async () => {
+  const response = await fetch(`${origin}/api/auth/google`, { redirect: 'manual' });
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get('location'), 'http://localhost:5173/login?auth_error=google_not_configured');
+});
+
+test('Google callback rejects missing state and returns to the login page', async () => {
+  const response = await fetch(`${origin}/api/auth/google/callback`, { redirect: 'manual' });
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get('location'), 'http://localhost:5173/login?auth_error=google_cancelled');
 });
 
 test('state-changing browser requests require an allowed Origin', async () => {

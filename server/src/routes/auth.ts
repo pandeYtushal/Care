@@ -55,6 +55,10 @@ const frontendUrl = () => {
   return env.allowedOrigins[0] || 'http://localhost:5173';
 };
 const googleError = (res: Parameters<typeof clearSessionCookie>[0], code: string) => res.redirect(`${frontendUrl()}/login?auth_error=${encodeURIComponent(code)}`);
+function logGoogleFailure(stage: string, reason: string, status?: number) {
+  // Deliberately exclude OAuth codes, cookies, tokens, email addresses, and provider response bodies.
+  console.warn('Google sign-in failed', { stage, reason, ...(status ? { status } : {}) });
+}
 
 type GoogleJwk = JsonWebKey & { kid?: string };
 type GoogleClaims = { iss?: string; aud?: string | string[]; azp?: string; sub?: string; email?: string; email_verified?: boolean | string; name?: string; nonce?: string; exp?: number; iat?: number };
@@ -112,14 +116,32 @@ router.get('/google/callback', asyncRoute(async (req, res) => {
   const verifier = req.cookies?.atelier_google_verifier ?? '';
   for (const name of ['atelier_google_state', 'atelier_google_nonce', 'atelier_google_verifier']) clearOAuthCookie(res, name);
   const suppliedState = typeof req.query.state === 'string' ? req.query.state : '';
-  if (!state || !nonce || !verifier || !suppliedState || state.length !== suppliedState.length || !timingSafeEqual(Buffer.from(state), Buffer.from(suppliedState)) || typeof req.query.code !== 'string') return googleError(res, 'google_cancelled');
+  if (typeof req.query.error === 'string') {
+    logGoogleFailure('callback', req.query.error === 'access_denied' ? 'user_cancelled' : 'provider_error');
+    return googleError(res, 'google_cancelled');
+  }
+  const stateMatches = Boolean(state && suppliedState && state.length === suppliedState.length && timingSafeEqual(Buffer.from(state), Buffer.from(suppliedState)));
+  if (!state || !nonce || !verifier || !suppliedState || !stateMatches || typeof req.query.code !== 'string') {
+    const reason = !state || !nonce || !verifier ? 'oauth_cookie_missing' : !suppliedState || !stateMatches ? 'state_mismatch' : 'authorization_code_missing';
+    logGoogleFailure('callback_validation', reason);
+    return googleError(res, 'google_cancelled');
+  }
   if (!env.googleClientId || !env.googleClientSecret || !env.googleRedirectUri) return googleError(res, 'google_not_configured');
+  let stage = 'token_exchange';
   try {
     const tokenResponse = await externalFetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code: req.query.code, client_id: env.googleClientId, client_secret: env.googleClientSecret, redirect_uri: env.googleRedirectUri, grant_type: 'authorization_code', code_verifier: verifier }) });
-    if (!tokenResponse.ok) return googleError(res, 'google_signin_failed');
+    if (!tokenResponse.ok) {
+      logGoogleFailure(stage, 'provider_rejected_exchange', tokenResponse.status);
+      return googleError(res, 'google_signin_failed');
+    }
     const tokenPayload = await tokenResponse.json() as { id_token?: string };
-    if (!tokenPayload.id_token) return googleError(res, 'google_signin_failed');
+    if (!tokenPayload.id_token) {
+      logGoogleFailure(stage, 'id_token_missing');
+      return googleError(res, 'google_signin_failed');
+    }
+    stage = 'identity_validation';
     const identity = await verifyGoogleIdToken(tokenPayload.id_token, nonce);
+    stage = 'account_and_session';
     const client = await pool.connect();
     let sessionToken = '';
     let expiresAt = new Date();
@@ -152,7 +174,7 @@ router.get('/google/callback', asyncRoute(async (req, res) => {
     setSessionCookie(res, sessionToken, expiresAt, env.nodeEnv === 'production');
     return res.redirect(`${frontendUrl()}/login?google=success`);
   } catch (error) {
-    console.error('Google sign-in failed', { errorType: error instanceof Error ? error.name : 'UnknownError' });
+    logGoogleFailure(stage, error instanceof Error ? error.name : 'unknown_error');
     return googleError(res, 'google_signin_failed');
   }
 }));
